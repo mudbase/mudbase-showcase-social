@@ -1,0 +1,71 @@
+@page "{id}"
+@model MudbaseShowcase.Social.Pages.Posts.DetailModel
+@{
+    ViewData["Title"] = "Post";
+    string returnUrl = ViewContext.HttpContext.Request.Path + ViewContext.HttpContext.Request.QueryString;
+}
+
+@if (Model.IsNotFound)
+{
+    <div class="text-center py-5">
+        <p class="text-muted">This post isn't available anymore.</p>
+        <a class="btn btn-brand btn-sm" asp-page="/Index">Back to the feed</a>
+    </div>
+}
+else if (Model.LoadError is not null)
+{
+    <p class="text-danger">@Model.LoadError</p>
+}
+else if (Model.Card is not null)
+{
+    <partial name="_PostCard" model="Model.Card" />
+
+    <hr />
+
+    <h2 class="h6 text-muted mb-3">Comments</h2>
+
+    @if (Model.IsSignedIn)
+    {
+        <div class="mb-4">
+            @if (Model.CommentError is not null)
+            {
+                <p class="text-danger small" role="alert">@Model.CommentError</p>
+            }
+            <form method="post" asp-page-handler="Comment">
+                <div class="mb-2">
+                    <textarea asp-for="Comment.Content" class="form-control" rows="2" maxlength="300" placeholder="Write a comment…"></textarea>
+                    <span asp-validation-for="Comment.Content" class="text-danger small"></span>
+                </div>
+                <button type="submit" class="btn btn-brand btn-sm">Comment</button>
+            </form>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-light border d-flex justify-content-between align-items-center mb-4">
+            <span class="small text-muted">Sign in to join the conversation.</span>
+            <a class="btn btn-brand btn-sm" asp-page="/Login" asp-route-ReturnUrl="@returnUrl">Sign in</a>
+        </div>
+    }
+
+    @if (Model.Comments.Count == 0)
+    {
+        <p class="text-muted small text-center py-3">No comments yet.</p>
+    }
+    else
+    {
+        @foreach (CommentDocument comment in Model.Comments)
+        {
+            <div class="comment-item d-flex gap-2">
+                <span class="avatar-circle" style="width: 32px; height: 32px; font-size: 0.75rem;">@DisplayHelpers.Initials(comment.AuthorName)</span>
+                <div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <span class="fw-semibold small">@comment.AuthorName</span>
+                        <span class="text-muted" style="font-size: 0.7rem;">@DisplayHelpers.FormatRelativeTime(comment.CreatedAt)</span>
+                    </div>
+                    <p class="mb-0 small post-content">@comment.Content</p>
+                </div>
+            </div>
+        }
+    }
+}

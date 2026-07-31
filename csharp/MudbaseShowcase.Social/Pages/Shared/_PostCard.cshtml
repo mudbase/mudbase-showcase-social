@@ -1,0 +1,74 @@
+@model PostCardViewModel
+@{
+    PostDocument post = Model.Post;
+    string returnUrl = ViewContext.HttpContext.Request.Path + ViewContext.HttpContext.Request.QueryString;
+}
+<div class="card mb-3">
+    <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between mb-2">
+            <a class="d-flex align-items-center gap-2 text-decoration-none text-reset" asp-page="/Users/Detail" asp-route-userId="@post.AuthorId">
+                <span class="avatar-circle">@DisplayHelpers.Initials(post.AuthorName)</span>
+                <span>
+                    <span class="d-block fw-semibold small">@post.AuthorName</span>
+                    <span class="d-block text-muted" style="font-size: 0.75rem;">@DisplayHelpers.FormatRelativeTime(post.CreatedAt)</span>
+                </span>
+            </a>
+
+            @if (!Model.IsOwnPost)
+            {
+                @if (Model.IsSignedIn)
+                {
+                    <form method="post" asp-page-handler="ToggleFollow">
+                        <input type="hidden" name="targetUserId" value="@post.AuthorId" />
+                        <input type="hidden" name="targetUserName" value="@post.AuthorName" />
+                        <input type="hidden" name="pg" value="@Model.ReturnPage" />
+                        <button type="submit" class="btn btn-sm @(Model.FollowingAuthor ? "btn-outline-secondary" : "btn-brand")">
+                            @(Model.FollowingAuthor ? "Following" : "Follow")
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn btn-sm btn-brand" asp-page="/Login" asp-route-ReturnUrl="@returnUrl">Follow</a>
+                }
+            }
+        </div>
+
+        <p class="post-content mb-2">@post.Content</p>
+
+        @if (!string.IsNullOrWhiteSpace(post.ImageUrl))
+        {
+            <img src="@post.ImageUrl" alt="" class="post-image mb-2" loading="lazy" />
+        }
+
+        <div class="d-flex align-items-center gap-3 pt-1">
+            @if (Model.IsSignedIn)
+            {
+                <form method="post" asp-page-handler="ToggleLike" class="d-inline">
+                    <input type="hidden" name="postId" value="@post.Id" />
+                    <input type="hidden" name="pg" value="@Model.ReturnPage" />
+                    <button type="submit" class="btn btn-sm btn-link text-decoration-none px-2 @(Model.Liked ? "like-active" : "text-muted")">
+                        @(Model.Liked ? "♥" : "♡") @post.LikesCount
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-link text-decoration-none px-2 text-muted" asp-page="/Login" asp-route-ReturnUrl="@returnUrl">
+                    ♡ @post.LikesCount
+                </a>
+            }
+
+            @if (Model.LinkToDetail)
+            {
+                <a class="btn btn-sm btn-link text-decoration-none px-2 text-muted" asp-page="/Posts/Detail" asp-route-id="@post.Id">
+                    💬 @post.CommentsCount
+                </a>
+            }
+            else
+            {
+                <span class="px-2 text-muted small">💬 @post.CommentsCount</span>
+            }
+        </div>
+    </div>
+</div>

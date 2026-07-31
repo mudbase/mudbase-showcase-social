@@ -1,0 +1,74 @@
+@page "{userId}"
+@model MudbaseShowcase.Social.Pages.Users.DetailModel
+@{
+    ViewData["Title"] = Model.DisplayName;
+    string returnUrl = ViewContext.HttpContext.Request.Path + ViewContext.HttpContext.Request.QueryString;
+}
+
+@if (Model.LoadError is not null)
+{
+    <p class="text-danger">@Model.LoadError</p>
+}
+else
+{
+    <div class="d-flex align-items-start justify-content-between border-bottom pb-3 mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <span class="avatar-circle avatar-lg">@DisplayHelpers.Initials(Model.DisplayName)</span>
+            <div>
+                <h1 class="h5 fw-semibold mb-1">@Model.DisplayName</h1>
+                <div class="d-flex gap-3 text-muted small">
+                    <span><span class="fw-semibold text-dark">@Model.PostCount</span> posts</span>
+                    <span><span class="fw-semibold text-dark">@Model.FollowerCount</span> followers</span>
+                    <span><span class="fw-semibold text-dark">@Model.FollowingCount</span> following</span>
+                </div>
+            </div>
+        </div>
+
+        @if (!Model.IsOwnProfile)
+        {
+            @if (Model.IsSignedIn)
+            {
+                <form method="post" asp-page-handler="ToggleFollow">
+                    <input type="hidden" name="targetUserName" value="@Model.DisplayName" />
+                    <input type="hidden" name="pg" value="@Model.CurrentPage" />
+                    <button type="submit" class="btn btn-sm @(Model.Following ? "btn-outline-secondary" : "btn-brand")">
+                        @(Model.Following ? "Following" : "Follow")
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-brand" asp-page="/Login" asp-route-ReturnUrl="@returnUrl">Follow</a>
+            }
+        }
+    </div>
+
+    @if (Model.Posts.Count == 0)
+    {
+        <div class="border border-dashed rounded p-5 text-center text-muted">
+            No posts yet.
+        </div>
+    }
+    else
+    {
+        @foreach (PostCardViewModel card in Model.Posts)
+        {
+            <partial name="_PostCard" model="card" />
+        }
+
+        <div class="d-flex justify-content-between mt-3">
+            @if (Model.CurrentPage > 1)
+            {
+                <a class="btn btn-outline-secondary btn-sm" asp-page="/Users/Detail" asp-route-userId="@Model.UserId" asp-route-pg="@(Model.CurrentPage - 1)">← Newer</a>
+            }
+            else
+            {
+                <span></span>
+            }
+            @if (Model.HasMore)
+            {
+                <a class="btn btn-outline-secondary btn-sm" asp-page="/Users/Detail" asp-route-userId="@Model.UserId" asp-route-pg="@(Model.CurrentPage + 1)">Older →</a>
+            }
+        </div>
+    }
+}

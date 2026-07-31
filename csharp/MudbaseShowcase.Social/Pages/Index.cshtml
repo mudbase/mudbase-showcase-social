@@ -1,0 +1,76 @@
+@page
+@model MudbaseShowcase.Social.Pages.IndexModel
+@{
+    ViewData["Title"] = "Feed";
+}
+
+<div class="mb-4">
+    <h1 class="h4 fw-semibold">Mudbase Social</h1>
+    <p class="text-muted small">
+        A realtime social micro-blog built entirely on a real Mudbase project — no custom backend.
+        Browse as a guest; sign in to post, like, comment, and follow.
+    </p>
+</div>
+
+@if (Model.IsSignedIn)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            @if (Model.ComposeError is not null)
+            {
+                <p class="text-danger small" role="alert">@Model.ComposeError</p>
+            }
+            <form method="post" asp-page-handler="Create">
+                <div class="mb-2">
+                    <textarea asp-for="Composer.Content" class="form-control" rows="3" maxlength="500" placeholder="What's on your mind?"></textarea>
+                    <span asp-validation-for="Composer.Content" class="text-danger small"></span>
+                </div>
+                <div class="mb-3">
+                    <input asp-for="Composer.ImageUrl" class="form-control form-control-sm" placeholder="Optional image URL" />
+                    <span asp-validation-for="Composer.ImageUrl" class="text-danger small"></span>
+                </div>
+                <button type="submit" class="btn btn-brand">Post</button>
+            </form>
+        </div>
+    </div>
+}
+else
+{
+    <div class="alert alert-light border d-flex justify-content-between align-items-center mb-4">
+        <span class="small text-muted">Sign in to post, like, comment, and follow.</span>
+        <a class="btn btn-brand btn-sm" asp-page="/Login">Sign in</a>
+    </div>
+}
+
+@if (Model.LoadError is not null)
+{
+    <p class="text-danger">@Model.LoadError</p>
+}
+else if (Model.Posts.Count == 0)
+{
+    <div class="border border-dashed rounded p-5 text-center text-muted">
+        No posts yet — be the first to say something.
+    </div>
+}
+else
+{
+    @foreach (PostCardViewModel card in Model.Posts)
+    {
+        <partial name="_PostCard" model="card" />
+    }
+
+    <div class="d-flex justify-content-between mt-3">
+        @if (Model.CurrentPage > 1)
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-page="/Index" asp-route-pg="@(Model.CurrentPage - 1)">← Newer</a>
+        }
+        else
+        {
+            <span></span>
+        }
+        @if (Model.HasMore)
+        {
+            <a class="btn btn-outline-secondary btn-sm" asp-page="/Index" asp-route-pg="@(Model.CurrentPage + 1)">Older →</a>
+        }
+    </div>
+}

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MudbaseShowcase.Social</RootNamespace>
+    <AssemblyName>MudbaseShowcase.Social</AssemblyName>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Real Mudbase C# SDK, published at https://github.com/mudbase/mudbase-sdk (subdirectory csharp/),
+      NOT on NuGet. This path assumes a sibling-clone layout:
+
+        <parent>/
+          mudbase-showcase-social/       <- this repo
+          mudbase-sdk/                   <- git clone https://github.com/mudbase/mudbase-sdk.git
+
+      See README.md "Setup" for the exact clone command.
+    -->
+    <ProjectReference Include="../../../mudbase-sdk/csharp/src/Mudbase.Sdk/Mudbase.Sdk.csproj" />
+  </ItemGroup>
+
+</Project>
