@@ -1,0 +1,43 @@
+<h1 class="page-title">Feed</h1>
+<p class="page-subtitle">Public posts from everyone on Field Notes.</p>
+
+<% if @current_user %>
+  <form action="/posts" method="post" class="composer stack" novalidate>
+    <div class="field">
+      <label for="content">What's on your mind, <%= h(@current_user[:firstName]) %>?</label>
+      <textarea id="content" name="content" rows="3" maxlength="500" required><%= h(@content) %></textarea>
+    </div>
+    <div class="field">
+      <label for="image_url">Image URL <span class="field-hint">(optional)</span></label>
+      <input type="text" id="image_url" name="image_url" placeholder="https://example.com/photo.jpg" value="<%= h(@image_url) %>">
+    </div>
+    <button type="submit" class="btn">Post</button>
+  </form>
+<% else %>
+  <div class="empty-state" style="margin-bottom:2rem;">
+    <p><a href="/login">Sign in</a> or <a href="/register">create an account</a> to post, comment, like, and follow.</p>
+  </div>
+<% end %>
+
+<div class="section">
+  <% if @posts.empty? %>
+    <div class="empty-state">
+      <p>No posts yet. Be the first to share something.</p>
+    </div>
+  <% else %>
+    <ul class="post-list">
+      <% @posts.each do |post| %>
+        <%= erb :"posts/_card", layout: false, locals: { post: post } %>
+      <% end %>
+    </ul>
+  <% end %>
+</div>
+
+<div class="pager">
+  <% if @page > 1 %>
+    <a class="btn btn-outline btn-sm" href="/?page=<%= @page - 1 %>">&larr; Newer</a>
+  <% end %>
+  <% if @pagination && @pagination[:hasMore] %>
+    <a class="btn btn-outline btn-sm" href="/?page=<%= @page + 1 %>">Older &rarr;</a>
+  <% end %>
+</div>

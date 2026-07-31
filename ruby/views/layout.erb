@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Field Notes</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/">Field Notes</a>
+      <nav class="nav">
+        <a href="/">Feed</a>
+        <% if @current_user %>
+          <a href="/profile">Profile</a>
+          <form action="/logout" method="post" class="inline-form">
+            <button type="submit" class="link-button">Sign out</button>
+          </form>
+        <% else %>
+          <a href="/login">Sign in</a>
+        <% end %>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <% if @flash_notice %>
+      <p class="flash flash-notice" role="status"><%= h(@flash_notice) %></p>
+    <% end %>
+    <% if @flash_error %>
+      <p class="flash flash-error" role="alert"><%= h(@flash_error) %></p>
+    <% end %>
+
+    <%= yield %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>Field Notes runs entirely on <a href="https://www.mudbase.dev" target="_blank" rel="noopener noreferrer">Mudbase</a> - auth and database, no custom backend. <a href="/">Refresh feed</a></p>
+    </div>
+  </footer>
+</body>
+</html>

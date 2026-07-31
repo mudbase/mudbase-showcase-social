@@ -1,0 +1,64 @@
+<p><a href="/">&larr; Back to feed</a></p>
+
+<div class="post-card post-detail-card">
+  <div class="post-head">
+    <a class="avatar-circle" href="/users/<%= h(@post[:authorId]) %>"><%= h(initials(@post[:authorName])) %></a>
+    <div>
+      <a class="post-author" href="/users/<%= h(@post[:authorId]) %>"><%= h(@post[:authorName]) %></a>
+      <p class="post-meta"><%= format_datetime(@post[:createdAt]) %></p>
+    </div>
+  </div>
+  <p class="post-content"><%= linkify_content(@post[:content]) %></p>
+  <% if @post[:imageUrl] && !@post[:imageUrl].to_s.empty? %>
+    <div class="post-image"><img src="<%= h(@post[:imageUrl]) %>" alt=""></div>
+  <% end %>
+  <div class="post-actions">
+    <% if @current_user %>
+      <form action="/posts/<%= h(@post[:_id]) %>/like" method="post" class="inline-form">
+        <button type="submit" class="link-button post-action <%= "liked" if @liked %>">
+          <%= @liked ? "&#9829;" : "&#9825;" %> <%= @post[:likesCount].to_i %> <%= pluralize_count(@post[:likesCount].to_i, "like") %>
+        </button>
+      </form>
+    <% else %>
+      <a href="/login" class="post-action">&#9825; <%= @post[:likesCount].to_i %> <%= pluralize_count(@post[:likesCount].to_i, "like") %></a>
+    <% end %>
+    <span class="post-action">&#128172; <%= @comments.size %> <%= pluralize_count(@comments.size, "comment") %></span>
+  </div>
+</div>
+
+<div class="section" id="comments">
+  <h2 class="section-header">Comments</h2>
+
+  <% if @current_user %>
+    <form action="/posts/<%= h(@post[:_id]) %>/comments" method="post" class="stack" novalidate style="margin-bottom:2rem;">
+      <div class="field">
+        <label for="comment_content">Add a comment</label>
+        <textarea id="comment_content" name="content" rows="2" maxlength="300"><%= h(@comment_content) %></textarea>
+      </div>
+      <button type="submit" class="btn btn-sm">Comment</button>
+    </form>
+  <% else %>
+    <p class="page-subtitle"><a href="/login">Sign in</a> to leave a comment.</p>
+  <% end %>
+
+  <% if @comments.empty? %>
+    <div class="empty-state">
+      <p>No comments yet.</p>
+    </div>
+  <% else %>
+    <ul class="comment-list">
+      <% @comments.each do |comment| %>
+        <li class="comment-item">
+          <a class="avatar-circle avatar-sm" href="/users/<%= h(comment[:authorId]) %>"><%= h(initials(comment[:authorName])) %></a>
+          <div class="comment-body">
+            <p class="comment-head">
+              <a class="post-author" href="/users/<%= h(comment[:authorId]) %>"><%= h(comment[:authorName]) %></a>
+              <span class="post-meta"><%= format_relative(comment[:createdAt]) %></span>
+            </p>
+            <p class="comment-content"><%= linkify_content(comment[:content]) %></p>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

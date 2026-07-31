@@ -1,0 +1,25 @@
+<li class="post-card">
+  <div class="post-head">
+    <a class="avatar-circle" href="/users/<%= h(post[:authorId]) %>"><%= h(initials(post[:authorName])) %></a>
+    <div>
+      <a class="post-author" href="/users/<%= h(post[:authorId]) %>"><%= h(post[:authorName]) %></a>
+      <p class="post-meta"><%= format_relative(post[:createdAt]) %></p>
+    </div>
+  </div>
+  <p class="post-content"><%= linkify_content(post[:content]) %></p>
+  <% if post[:imageUrl] && !post[:imageUrl].to_s.empty? %>
+    <div class="post-image"><img src="<%= h(post[:imageUrl]) %>" alt=""></div>
+  <% end %>
+  <div class="post-actions">
+    <% if @current_user %>
+      <form action="/posts/<%= h(post[:_id]) %>/like" method="post" class="inline-form">
+        <button type="submit" class="link-button post-action <%= "liked" if my_liked_post_ids.include?(post[:_id]) %>">
+          <%= my_liked_post_ids.include?(post[:_id]) ? "&#9829;" : "&#9825;" %> <%= post[:likesCount].to_i %>
+        </button>
+      </form>
+    <% else %>
+      <a href="/login" class="post-action">&#9825; <%= post[:likesCount].to_i %></a>
+    <% end %>
+    <a href="/posts/<%= h(post[:_id]) %>" class="post-action">&#128172; <%= post[:commentsCount].to_i %></a>
+  </div>
+</li>
