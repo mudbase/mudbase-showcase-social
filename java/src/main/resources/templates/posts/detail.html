@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title th:text="${post.authorName + ': ' + #strings.abbreviate(post.content, 60)}">Post — Pulse</title>
+  <th:block th:replace="~{fragments/layout :: head-assets}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main class="container detail-container">
+  <a th:href="@{/}" class="back-link">&larr; Back to feed</a>
+
+  <article class="post-card post-card-detail">
+    <div th:replace="~{fragments/post :: card(${post}, ${'/posts/' + post.id})}"></div>
+  </article>
+
+  <section id="comments" class="comments-section">
+    <h2 class="section-title" th:text="${comments.size()} + ' ' + (${comments.size()} == 1 ? 'comment' : 'comments')">Comments</h2>
+
+    <div class="card card-pad composer" th:if="${isSignedIn}">
+      <form method="post" th:action="@{/posts/{id}/comments(id=${post.id})}" th:object="${commentRequest}" novalidate>
+        <div class="field">
+          <label for="comment-content" class="sr-only">Write a comment</label>
+          <textarea id="comment-content" rows="2" placeholder="Write a comment…" th:field="*{content}"></textarea>
+          <p class="error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}">Error</p>
+        </div>
+        <div class="composer-actions">
+          <button type="submit" class="btn btn-accent btn-sm">Comment</button>
+        </div>
+      </form>
+    </div>
+    <div class="card card-pad composer composer-signed-out" th:unless="${isSignedIn}">
+      <a class="btn btn-accent btn-sm" th:href="@{/login(redirect='/posts/' + ${post.id})}">Sign in to comment</a>
+    </div>
+
+    <div th:if="${comments.isEmpty()}" class="empty-state empty-state-compact">
+      <p>No comments yet — say something first.</p>
+    </div>
+
+    <ul class="comment-list" th:unless="${comments.isEmpty()}">
+      <li class="comment-item" th:each="comment : ${comments}">
+        <a th:href="@{/users/{id}(id=${comment.authorId})}" class="comment-avatar" th:text="${#strings.substring(comment.authorName, 0, 1)}">A</a>
+        <div class="comment-body">
+          <div class="comment-header">
+            <a th:href="@{/users/{id}(id=${comment.authorId})}" class="comment-author" th:text="${comment.authorName}">Author</a>
+            <span class="comment-time" th:text="${comment.formattedCreatedAt}">now</span>
+          </div>
+          <p class="comment-content" th:text="${comment.content}">Comment text</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

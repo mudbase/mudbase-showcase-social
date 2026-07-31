@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title th:text="${profile.displayName + ' — Pulse'}">Profile — Pulse</title>
+  <th:block th:replace="~{fragments/layout :: head-assets}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main class="container profile-container">
+  <div class="profile-header card card-pad">
+    <div class="profile-avatar" th:text="${#strings.substring(profile.displayName, 0, 1)}">M</div>
+    <div class="profile-identity">
+      <h1 class="page-title profile-name" th:text="${profile.displayName}">Member</h1>
+      <div class="profile-stats">
+        <span><strong th:text="${profile.postCount}">0</strong> posts</span>
+        <span><strong th:text="${profile.followerCount}">0</strong> followers</span>
+        <span><strong th:text="${profile.followingCount}">0</strong> following</span>
+      </div>
+    </div>
+    <form th:if="${isSignedIn and !isOwnProfile}" method="post" th:action="@{/users/{id}/follow(id=${profile.userId})}">
+      <input type="hidden" name="redirect" th:value="${'/users/' + profile.userId}" />
+      <button type="submit" class="btn" th:classappend="${isFollowing} ? 'btn-outline' : 'btn-accent'" th:text="${isFollowing} ? 'Following' : 'Follow'">Follow</button>
+    </form>
+    <a th:unless="${isSignedIn}" class="btn btn-accent" th:href="@{/login(redirect='/users/' + ${profile.userId})}">Sign in to follow</a>
+  </div>
+
+  <h2 class="section-title">Posts</h2>
+  <div th:if="${profile.posts.isEmpty()}" class="empty-state">
+    <p th:text="${isOwnProfile} ? 'You haven''t posted anything yet.' : (${profile.displayName} + ' hasn''t posted anything yet.')">No posts yet.</p>
+  </div>
+  <div th:unless="${profile.posts.isEmpty()}" class="post-list">
+    <article th:each="post : ${profile.posts}" class="post-card" th:id="'post-' + ${post.id}">
+      <div th:replace="~{fragments/post :: card(${post}, ${'/users/' + profile.userId})}"></div>
+    </article>
+  </div>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>

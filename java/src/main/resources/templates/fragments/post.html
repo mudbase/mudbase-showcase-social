@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <!--/* Shared post card, used by the feed, post detail, and profile pages. `currentPath` is
+         where the like/follow forms below should redirect back to on submit - see
+         support/RedirectSupport.java and PostController/ProfileController's `redirect` param. */-->
+  <div th:fragment="card(post, currentPath)" class="post-card-inner">
+    <div class="post-header">
+      <a th:href="@{/users/{id}(id=${post.authorId})}" class="post-avatar" th:text="${#strings.substring(post.authorName, 0, 1)}">A</a>
+      <div class="post-meta">
+        <a th:href="@{/users/{id}(id=${post.authorId})}" class="post-author" th:text="${post.authorName}">Author</a>
+        <span class="post-time" th:text="${post.formattedCreatedAt}">now</span>
+      </div>
+      <form th:if="${isSignedIn and !post.isOwnPost(currentUser?.userId)}" method="post" th:action="@{/users/{id}/follow(id=${post.authorId})}" class="post-follow-form">
+        <input type="hidden" name="redirect" th:value="${currentPath}" />
+        <button type="submit" class="btn btn-sm" th:classappend="${post.followingAuthor} ? 'btn-outline' : 'btn-accent'" th:text="${post.followingAuthor} ? 'Following' : 'Follow'">Follow</button>
+      </form>
+    </div>
+
+    <p class="post-content" th:text="${post.content}">Content</p>
+
+    <div class="post-media" th:if="${post.hasImage}">
+      <img th:src="${post.imageUrl}" th:alt="${post.authorName + ' post image'}" />
+    </div>
+
+    <div class="post-actions">
+      <form method="post" th:action="@{/posts/{id}/like(id=${post.id})}" class="like-form">
+        <input type="hidden" name="redirect" th:value="${currentPath}" />
+        <button type="submit" class="btn-icon-text" th:classappend="${post.likedByViewer} ? 'liked' : ''">
+          <span th:text="${post.likedByViewer} ? '&#9829;' : '&#9825;'">&#9825;</span>
+          <span th:text="${post.likesCount}">0</span>
+        </button>
+      </form>
+      <a th:href="@{/posts/{id}(id=${post.id})}" class="btn-icon-text">
+        <span>&#128172;</span>
+        <span th:text="${post.commentsCount}">0</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

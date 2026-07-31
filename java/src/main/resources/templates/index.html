@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Pulse</title>
+  <th:block th:replace="~{fragments/layout :: head-assets}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+
+<main class="container feed-container">
+  <h1 class="page-title">Pulse</h1>
+  <p class="lede">Every post, like, comment, and follow on this page is served by a real Mudbase project — no custom backend at all. Browse freely; sign in to join the conversation.</p>
+
+  <div class="card card-pad composer" th:if="${isSignedIn}">
+    <form method="post" th:action="@{/posts}" th:object="${postComposerRequest}" novalidate>
+      <div class="field">
+        <label for="composer-content" class="sr-only">What's on your mind?</label>
+        <textarea id="composer-content" rows="3" placeholder="What's on your mind?" th:field="*{content}"></textarea>
+        <p class="error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}">Error</p>
+      </div>
+      <div class="field">
+        <label for="composer-image" class="hint-label">Image URL (optional)</label>
+        <input id="composer-image" type="text" placeholder="https://example.com/photo.jpg" th:field="*{imageUrl}" />
+        <p class="error" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}">Error</p>
+      </div>
+      <div class="composer-actions">
+        <button type="submit" class="btn btn-accent">Post</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="card card-pad composer composer-signed-out" th:unless="${isSignedIn}">
+    <p class="muted">Have something to say?</p>
+    <a class="btn btn-accent" th:href="@{/login(redirect='/')}">Sign in to post</a>
+  </div>
+
+  <div th:if="${posts.isEmpty()}" class="empty-state">
+    <p>No posts yet — be the first to say something.</p>
+  </div>
+
+  <div th:unless="${posts.isEmpty()}" class="post-list">
+    <article th:each="post : ${posts}" class="post-card" th:id="'post-' + ${post.id}">
+      <div th:replace="~{fragments/post :: card(${post}, ${'/'})}"></div>
+    </article>
+  </div>
+
+  <nav class="pager" th:if="${page > 1 or hasMore}">
+    <a th:if="${page > 1}" class="btn btn-outline btn-sm" th:href="@{/(page=${page - 1})}">← Newer</a>
+    <span th:unless="${page > 1}"></span>
+    <a th:if="${hasMore}" class="btn btn-outline btn-sm" th:href="@{/(page=${nextPage})}">Older →</a>
+  </nav>
+</main>
+
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>
