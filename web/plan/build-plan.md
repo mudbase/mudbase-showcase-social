@@ -65,73 +65,98 @@ wiring" instruction:
 6. **File/bucket creation is unreachable for any project end-user, verified.** See "Known
    limitations" below - confirmed with a real anonymous-session request, not just source reading.
 
-7. **CRITICAL, still open at the end of this build: the 4 collections have no role permissions
-   configured (`permissions: []` on all of them), so no project end-user - not even a real,
-   verified `customer` - can write to any of them yet.** Verified live via
-   `GET /api/projects/{projectId}/permissions-matrix` (readable with a plain `customer` JWT,
-   since `project:read` allows the `viewer` system role every project end-user carries) - every
-   one of `posts`/`comments`/`likes`/`follows` came back with an empty `permissions` array. A
-   fully verified, logged-in `customer` account (`mudhaxk+mbsocial1@gmail.com`, confirmed
-   `emailVerified: true`) still gets `403 {"error":"Insufficient permissions","required":
-   {"action":"create","collection":"posts"}}` when posting - `resolveCollectionPermission()` in
-   `middleware/collectionPermissions.js` only grants anything beyond the hardcoded
-   viewer+read fallback when the collection has an explicit `{role, actions, conditions}` entry,
-   and none exist here. **This is a project-provisioning gap, not an app bug** - granting it
-   requires `PATCH /api/projects/:projectId/multi-role/roles/:roleSlug/collections/:collectionId/permissions`,
-   which is `authRequired` + `rbacCheck("project","update")` + `requireOwnerOrAdmin` - an org
-   owner/admin credential no project end-user (and no credential this task provided) can ever
-   satisfy. See "Setup still required before this app can write data" immediately below.
+7. **RESOLVED during this build: the 4 collections initially had no role permissions configured
+   (`permissions: []` on all of them), which blocked every project end-user - even a real,
+   verified `customer` - from writing.** Found via `GET /api/projects/{projectId}/
+   permissions-matrix` (readable with a plain `customer` JWT, since `project:read` allows the
+   `viewer` system role every project end-user carries): all four of `posts`/`comments`/`likes`/
+   `follows` came back with an empty `permissions` array, and a fully verified `customer` account
+   got `403 Insufficient permissions` on `POST posts`. This required org owner/admin access
+   (`PATCH /api/projects/:projectId/multi-role/roles/:roleSlug/collections/:collectionId/
+   permissions`, gated by `requireOwnerOrAdmin`) that this build's own credentials (`pk_` key +
+   project ID only) could not reach - the project owner granted `customer` role
+   `create/read/update/delete`, `dataScope: "all"` on all four collections directly via the
+   org-owner API. Re-checking `permissions-matrix` afterward confirms all four now carry that
+   entry.
 
-## Setup still required before this app can write data (needs org owner/admin access)
-
-Run once, authenticated as an owner/admin of this project's org (via the Mudbase console or an
-org-level session - not anything a project end-user can obtain), for each of the 4 collection
-IDs:
-
-```bash
-curl -X PATCH "https://cloud.mudbase.dev/api/projects/6a6cf79dd07caabbbdfbe9c5/multi-role/roles/customer/collections/{collectionId}/permissions" \
-  -H "Authorization: Bearer <org owner/admin JWT>" \
-  -H "Content-Type: application/json" \
-  -d '{"actions":["create","read","update"],"dataScope":"all"}'
-```
-
-`{collectionId}` = `6a6cf7d0d07caabbbdfbe9db` (posts), `6a6cf7d1d07caabbbdfbe9f1` (comments),
-`6a6cf81ed07caabbbdfbea20` (likes), `6a6cf81ed07caabbbdfbea32` (follows). `dataScope: "all"` (not
-`"own"`) because this app's own application-layer logic already needs to read/update rows it
-doesn't own (checking another user's like/follow row before toggling, incrementing another
-user's post's counters) - Mudbase's per-row ownership enforcement would block exactly the calls
-`useToggleLike`/`useToggleFollow`/`useCreateComment` make. Once this is run, the full write path
-(post, like, comment, follow) is expected to work end-to-end with no code changes - reads,
-anonymous gating, auth, and the entire UI were already verified against the real backend; only
-this permissions grant was outside what this build's credentials (`pk_` key + project ID only,
-no org owner session) could reach. Two real, fully verified `customer` accounts already exist on
-this project ready to exercise it immediately: `mudhaxk+mbsocial1@gmail.com` ("Ava Poster") and
-`mudhaxk+mbsocial2@gmail.com` ("Ben Follower"), both password `SocialTest123!`.
+8. **CRITICAL, still open: `POST .../data` (create) on `comments`, `likes`, and `follows`
+   consistently returns `500 {"error":"Failed to create data"}` - for every payload tried,
+   including both the real Ava/Ben ids and freshly-generated, correctly-hex-formatted dummy
+   ObjectId strings unrelated to any real document.** `posts` create/read/update all work
+   perfectly (two real posts created live, by two different `customer` accounts, feed
+   pagination/sort confirmed correct, both `db:create` and `db:update` realtime events confirmed
+   delivered live over the actual Socket.IO connection). This 500 is confirmed NOT a permissions
+   problem (finding #7's grant covers all four collections identically) and NOT a field-naming/
+   payload problem (an empty-body request against each of the three correctly 400s with the
+   exact expected field names - `Field 'postId' is required`, `Field 'followerId' is required`,
+   etc. - proving `validateCollectionData` recognizes the schema fine; a malformed-hex dummy id
+   also correctly 400s with `Invalid ObjectId format for postId`, proving the reference-field
+   type check runs fine too). The failure happens only once execution reaches
+   `document.save()` inside `routes/data.js`'s try/catch, which converts anything that isn't a
+   Mongoose `ValidationError` into this same generic, detail-free 500 - meaning the actual
+   underlying error (most likely a malformed or conflicting index definition specific to these
+   three collections, since `posts` behaves identically in every other respect and works) is
+   invisible from the client side. Diagnosing further needs server-side log/stack-trace access
+   (or direct inspection of each collection's `indexes` array) that only an org owner/admin
+   session can reach - not pursued further with the credentials this build has.
 
 ## Data Models (Mudbase Collections — already provisioned, used as-is, not recreated)
 
 ### posts — `6a6cf7d0d07caabbbdfbe9db`
 `authorId` (string), `authorName` (string), `content` (string), `imageUrl` (string, optional),
 `likesCount` (number), `commentsCount` (number), plus `_id`/`createdAt`/`updatedAt`.
-Intended permissions: `customer` role → create/read/update. Anonymous (`viewer`, no `customRole`)
-→ read only (this half is live today via the platform's hardcoded viewer+read fallback - see
-finding #7 above for why the `customer` write half is not yet active).
+Permissions: `customer` role → create/read/update/delete, `dataScope: "all"` (granted live, see
+finding #7). Anonymous (`viewer`, no `customRole`) → read only. **Fully verified working live**:
+two posts created by two different accounts, sort/pagination/counter updates and both realtime
+event types all confirmed - see "Live smoke test results" below.
 
 ### comments — `6a6cf7d1d07caabbbdfbe9f1`
 `postId` (string), `authorId` (string), `authorName` (string), `content` (string).
 One row per comment; sorted `createdAt` ascending in the UI (oldest first, normal thread order).
+Permissions granted identically to `posts` (finding #7), but **`POST .../data` currently 500s
+regardless** - see finding #8. Read/permission-check paths are confirmed fine; only the actual
+`document.save()` fails.
 
 ### likes — `6a6cf81ed07caabbbdfbea20`
 `postId` (string), `userId` (string). One row per (postId, userId) pair - this collection type
 has no compound unique index, so uniqueness is enforced at the application layer: every toggle
 re-queries `{postId, userId}` immediately before creating/deleting (see `useToggleLike`), which is
 a reasonable (not airtight) guard against a double-click/double-tab race, per the task's own
-"check-then-act is fine for a demo" instruction.
+"check-then-act is fine for a demo" instruction. **`POST .../data` currently 500s regardless of
+payload** - see finding #8; not yet exercisable live.
 
 ### follows — `6a6cf81ed07caabbbdfbea32`
 `followerId` (string), `followingId` (string), `followingName` (string, optional - denormalized
 at write time so a profile page can resolve a display name for a user who has never posted; see
 "Known limitations"). Same check-then-act uniqueness guard as likes (`useToggleFollow`).
+**`POST .../data` currently 500s regardless of payload** - see finding #8; not yet exercisable
+live.
+
+## Live smoke test results (2026-07-31, against the real project, after finding #7's permission grant)
+
+Two real accounts, both registered, both real-email-verified (verification link retrieved and
+followed via Gmail), both logged in for a real JWT: `mudhaxk+mbsocial1@gmail.com` ("Ava Poster")
+and `mudhaxk+mbsocial2@gmail.com` ("Ben Follower"), password `SocialTest123!` for both.
+
+| Step | Result |
+|---|---|
+| Ava creates a post with an image URL | ✅ `201`, `imageUrl` stored, correct shape |
+| Ava creates a second post (no image) | ✅ `201` - confirms the first wasn't a fluke |
+| Feed read: `sort=-createdAt`, both posts | ✅ correct order (newest first), correct `pagination.total` |
+| Ben increments `likesCount`/`commentsCount` via `PATCH posts` | ✅ both succeed, reflected on re-read |
+| Ben `POST likes` (the row itself) | ❌ `500` - finding #8 |
+| Ben `POST comments` (the row itself) | ❌ `500` - finding #8 |
+| Ben `POST follows` (the row itself) | ❌ `500` - finding #8 |
+| Realtime: Ava subscribed to `posts`, Ben creates a post via REST | ✅ Ava's socket receives `db:create` with the correct document, live, within ~1.5s |
+| Realtime: Ava subscribed to `posts`, Ben PATCHes `likesCount` via REST | ✅ Ava's socket receives `db:update` with the correct new value, live |
+
+**Net result:** the entire app-to-Mudbase contract this app relies on for `posts` (create, read,
+sort, pagination, update, and both realtime event types) is proven correct against the real,
+live backend with two independent real accounts. The `likes`/`comments`/`follows` write path is
+blocked purely by the server-side 500 in finding #8, not by anything in this app's code -
+`useToggleLike`/`useCreateComment`/`useToggleFollow` all issue exactly the request shapes
+confirmed here (the same `postId`/`userId`/`followerId`/`followingId`/`content` fields the
+empty-body 400 responses confirm are correct).
 
 ## Auth Flow
 ```
@@ -188,13 +213,14 @@ appear live on a post already open in your feed, not just brand-new posts.
 
 ## Known Limitations (real platform constraints, not bugs)
 
-**Collection write permissions for `customer` are not yet granted on this project (see "Setup
-still required" above) - this blocked completing the live write-path smoke test (post/like/
-comment/follow) in this build session.** Everything reachable without an org owner/admin
-credential was verified live end-to-end instead: guest anonymous session + public read, signup,
-email verification (real emails, real tokens, both accounts verified), login, and the correct
-403 denial for both anonymous writes and unauthenticated reads. The moment the PATCH calls above
-are run once, the remaining write-path checks require no further code changes.
+**`comments`/`likes`/`follows` document creation currently 500s server-side (finding #8) -
+still open.** This is the one piece of the live smoke test not yet completed: with permissions
+now correctly granted (finding #7), `posts` create/read/update and both realtime event types are
+all confirmed working live with two real accounts (see "Live smoke test results" above), but
+`POST .../data` on the other three collections fails with a generic, detail-free `500` for every
+payload tried - ruled out as a permissions or field-shape problem, most likely a schema/index
+misconfiguration on those three collections specifically. Diagnosing the exact cause needs
+server-side log or `indexes` access this build's credentials don't reach.
 
 **Post images are a pasted URL, not an upload.** Verified live: `rbacCheck("file","create")`
 (both bucket creation and file upload) only allows the org-level system roles

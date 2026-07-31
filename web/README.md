@@ -36,24 +36,28 @@ This app expects a Mudbase project already set up with:
 2. The Multi-Role feature's default `customer` role (Mudbase's single-role starter template —
    there is no separate seller/admin role in this app).
 3. Four collections — `posts`, `comments`, `likes`, `follows` — with the field shapes documented
-   in `plan/build-plan.md`, **and the `customer` role granted `create`/`read`/`update` on all
-   four** (see the CRITICAL note immediately below — this last part was not yet done as of this
-   build).
+   in `plan/build-plan.md`, and the `customer` role granted `create`/`read`/`update`/`delete`,
+   `dataScope: "all"`, on all four (confirmed live via `GET /api/projects/{id}/
+   permissions-matrix` — see `plan/build-plan.md` finding #7).
 
 `.env.example` lists every ID this app needs once that's done.
 
-> **CRITICAL — one setup step outstanding on the live project this was built against.**
-> As of this build, all 4 collections on `cloud.mudbase.dev` project `6a6cf79dd07caabbbdfbe9c5`
-> have `permissions: []` (verified live via `GET /api/projects/{id}/permissions-matrix`) — so no
-> project end-user, including a real verified `customer` account, can create/update anything yet.
-> This requires an org owner/admin credential to fix (`PATCH .../multi-role/roles/customer/
-> collections/{collectionId}/permissions`), which is outside what a project end-user — or this
-> build's given credentials (`pk_` key + project ID only) — can ever obtain. See
-> `plan/build-plan.md` → "Setup still required before this app can write data" for the exact
-> `curl` commands to run once, plus two already-registered, already-verified test accounts ready
-> to use the moment it's done. Everything else was verified live end-to-end: anonymous session +
-> public read, signup, real email verification (both test accounts), login, and correct 403
-> denials for anonymous/unauthenticated writes.
+## Live smoke test (2026-07-31, real project, two real accounts)
+
+`posts` create/read/sort/pagination/counter-update, and both `db:create` and `db:update`
+realtime events, are all **confirmed working end-to-end** against the live backend with two
+independently registered, real-email-verified `customer` accounts (`mudhaxk+mbsocial1@gmail.com`
+"Ava Poster", `mudhaxk+mbsocial2@gmail.com` "Ben Follower" — see `plan/build-plan.md` → "Live
+smoke test results" for the full table).
+
+> **Still open:** `POST .../data` (create) on `comments`, `likes`, and `follows` currently
+> returns a generic `500 {"error":"Failed to create data"}` for every payload tried — confirmed
+> not a permissions issue (identical grant to `posts`, which works) and not a payload/field-name
+> issue (an empty body correctly 400s with the exact expected field names on all three; a
+> malformed id correctly 400s too). The failure is inside `document.save()` on the Mudbase
+> backend itself, most likely a schema/index misconfiguration specific to these three
+> collections. See `plan/build-plan.md` finding #8 for the full diagnostic — this needs
+> server-side log/index access this build's credentials don't reach.
 
 ## Known limitations (real platform constraints, verified live, not bugs)
 
