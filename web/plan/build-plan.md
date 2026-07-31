@@ -79,26 +79,21 @@ wiring" instruction:
    org-owner API. Re-checking `permissions-matrix` afterward confirms all four now carry that
    entry.
 
-8. **CRITICAL, still open: `POST .../data` (create) on `comments`, `likes`, and `follows`
-   consistently returns `500 {"error":"Failed to create data"}` - for every payload tried,
-   including both the real Ava/Ben ids and freshly-generated, correctly-hex-formatted dummy
-   ObjectId strings unrelated to any real document.** `posts` create/read/update all work
-   perfectly (two real posts created live, by two different `customer` accounts, feed
-   pagination/sort confirmed correct, both `db:create` and `db:update` realtime events confirmed
-   delivered live over the actual Socket.IO connection). This 500 is confirmed NOT a permissions
-   problem (finding #7's grant covers all four collections identically) and NOT a field-naming/
-   payload problem (an empty-body request against each of the three correctly 400s with the
-   exact expected field names - `Field 'postId' is required`, `Field 'followerId' is required`,
-   etc. - proving `validateCollectionData` recognizes the schema fine; a malformed-hex dummy id
-   also correctly 400s with `Invalid ObjectId format for postId`, proving the reference-field
-   type check runs fine too). The failure happens only once execution reaches
-   `document.save()` inside `routes/data.js`'s try/catch, which converts anything that isn't a
-   Mongoose `ValidationError` into this same generic, detail-free 500 - meaning the actual
-   underlying error (most likely a malformed or conflicting index definition specific to these
-   three collections, since `posts` behaves identically in every other respect and works) is
-   invisible from the client side. Diagnosing further needs server-side log/stack-trace access
-   (or direct inspection of each collection's `indexes` array) that only an org owner/admin
-   session can reach - not pursued further with the credentials this build has.
+8. **RESOLVED: `POST .../data` (create) on `comments`, `likes`, and `follows` initially returned
+   `500 {"error":"Failed to create data"}` for every payload tried** (including both real
+   Ava/Ben ids and freshly-generated dummy ObjectId strings) **while `posts` create worked
+   fine.** Ruled out permissions (finding #7's grant covers all four collections identically) and
+   field-naming/payload shape (empty-body requests against each of the three correctly 400 with
+   the exact expected field names, and a malformed-hex dummy id correctly 400s too - both prove
+   the request reached `document.save()` before failing). Root cause, confirmed by the project
+   owner: the shared MongoDB Atlas cluster backing the whole Mudbase platform had hit its
+   hard 500-collection cap (an Atlas Flex-tier, cluster-wide limit - nothing specific to this
+   project or these three collections; `posts`' underlying Mongo collection likely already
+   existed from earlier testing, while `comments`/`likes`/`follows` needed to be freshly
+   materialized on first insert and couldn't be). Fixed by the project owner dropping 20
+   confirmed-orphaned collections elsewhere on the cluster to free capacity - not an app bug,
+   and not something fixable from this app's code or this build's credentials. Re-verified live
+   afterward: all three collections now create successfully - see "Live smoke test results".
 
 ## Data Models (Mudbase Collections — already provisioned, used as-is, not recreated)
 
@@ -113,26 +108,24 @@ event types all confirmed - see "Live smoke test results" below.
 ### comments — `6a6cf7d1d07caabbbdfbe9f1`
 `postId` (string), `authorId` (string), `authorName` (string), `content` (string).
 One row per comment; sorted `createdAt` ascending in the UI (oldest first, normal thread order).
-Permissions granted identically to `posts` (finding #7), but **`POST .../data` currently 500s
-regardless** - see finding #8. Read/permission-check paths are confirmed fine; only the actual
-`document.save()` fails.
+Permissions granted identically to `posts` (finding #7). **Fully verified working live** - see
+"Live smoke test results" below.
 
 ### likes — `6a6cf81ed07caabbbdfbea20`
 `postId` (string), `userId` (string). One row per (postId, userId) pair - this collection type
 has no compound unique index, so uniqueness is enforced at the application layer: every toggle
 re-queries `{postId, userId}` immediately before creating/deleting (see `useToggleLike`), which is
 a reasonable (not airtight) guard against a double-click/double-tab race, per the task's own
-"check-then-act is fine for a demo" instruction. **`POST .../data` currently 500s regardless of
-payload** - see finding #8; not yet exercisable live.
+"check-then-act is fine for a demo" instruction. **Fully verified working live** - see "Live smoke
+test results" below.
 
 ### follows — `6a6cf81ed07caabbbdfbea32`
 `followerId` (string), `followingId` (string), `followingName` (string, optional - denormalized
 at write time so a profile page can resolve a display name for a user who has never posted; see
 "Known limitations"). Same check-then-act uniqueness guard as likes (`useToggleFollow`).
-**`POST .../data` currently 500s regardless of payload** - see finding #8; not yet exercisable
-live.
+**Fully verified working live** - see "Live smoke test results" below.
 
-## Live smoke test results (2026-07-31, against the real project, after finding #7's permission grant)
+## Live smoke test results (2026-07-31, against the real project, after finding #7's permission grant and finding #8's Atlas capacity fix)
 
 Two real accounts, both registered, both real-email-verified (verification link retrieved and
 followed via Gmail), both logged in for a real JWT: `mudhaxk+mbsocial1@gmail.com` ("Ava Poster")
@@ -142,21 +135,29 @@ and `mudhaxk+mbsocial2@gmail.com` ("Ben Follower"), password `SocialTest123!` fo
 |---|---|
 | Ava creates a post with an image URL | ✅ `201`, `imageUrl` stored, correct shape |
 | Ava creates a second post (no image) | ✅ `201` - confirms the first wasn't a fluke |
-| Feed read: `sort=-createdAt`, both posts | ✅ correct order (newest first), correct `pagination.total` |
-| Ben increments `likesCount`/`commentsCount` via `PATCH posts` | ✅ both succeed, reflected on re-read |
-| Ben `POST likes` (the row itself) | ❌ `500` - finding #8 |
-| Ben `POST comments` (the row itself) | ❌ `500` - finding #8 |
-| Ben `POST follows` (the row itself) | ❌ `500` - finding #8 |
+| Ben creates a post (used for the second realtime round below) | ✅ `201` |
+| Feed read: `sort=-createdAt`, all three posts | ✅ correct order (newest first), correct `pagination.total` |
+| Ben comments on Ava's post | ✅ `201` |
+| Ben likes Ava's post (check-then-act: query-then-create) | ✅ `200` empty check, then `201` create |
+| Ben follows Ava | ✅ `201` |
+| Ava comments on / likes / follows Ben (second round, for realtime check below) | ✅ `201` × 3 |
+| `PATCH posts` counter updates (`likesCount`/`commentsCount`) after each write | ✅ all succeed, reflected on re-read |
+| Post detail: comments for Ava's post, sorted oldest-first | ✅ Ben's comment present, correct content |
+| `useMyLikedPostIds`-equivalent read (Ben's liked postIds) | ✅ contains Ava's post id |
+| `useMyFollowingIds`-equivalent read (Ben's following ids) | ✅ contains Ava's id + denormalized name |
+| `useFollowCounts`-equivalent reads | ✅ Ava: 1 follower / 0 following; Ben: 0 followers / 1 following |
+| Ava's profile post count | ✅ 2 (her two posts) |
 | Realtime: Ava subscribed to `posts`, Ben creates a post via REST | ✅ Ava's socket receives `db:create` with the correct document, live, within ~1.5s |
 | Realtime: Ava subscribed to `posts`, Ben PATCHes `likesCount` via REST | ✅ Ava's socket receives `db:update` with the correct new value, live |
+| Realtime: Ben subscribed to `comments`+`likes`+`follows`, Ava writes to all three via REST | ✅ Ben's socket receives all three `db:create` events live, correctly scoped to each `collectionId` |
 
-**Net result:** the entire app-to-Mudbase contract this app relies on for `posts` (create, read,
-sort, pagination, update, and both realtime event types) is proven correct against the real,
-live backend with two independent real accounts. The `likes`/`comments`/`follows` write path is
-blocked purely by the server-side 500 in finding #8, not by anything in this app's code -
-`useToggleLike`/`useCreateComment`/`useToggleFollow` all issue exactly the request shapes
-confirmed here (the same `postId`/`userId`/`followerId`/`followingId`/`content` fields the
-empty-body 400 responses confirm are correct).
+**Net result:** the entire app-to-Mudbase contract this app relies on - post/comment/like/follow
+create, read, sort, pagination, counter updates, follower/following counts, denormalized display
+names, and realtime `db:create`/`db:update` on every collection this app touches - is proven
+correct against the real, live backend with two independent, real-email-verified accounts.
+`useToggleLike`/`useCreateComment`/`useToggleFollow`/`usePostsLive` all issue exactly the request
+shapes exercised here. No code changes were needed once the two infrastructure issues (findings
+#7 and #8) were resolved on the platform side.
 
 ## Auth Flow
 ```
@@ -212,15 +213,6 @@ appear live on a post already open in your feed, not just brand-new posts.
   this app (no Route Handlers at all, unlike the ecommerce showcase's payment-link endpoint).
 
 ## Known Limitations (real platform constraints, not bugs)
-
-**`comments`/`likes`/`follows` document creation currently 500s server-side (finding #8) -
-still open.** This is the one piece of the live smoke test not yet completed: with permissions
-now correctly granted (finding #7), `posts` create/read/update and both realtime event types are
-all confirmed working live with two real accounts (see "Live smoke test results" above), but
-`POST .../data` on the other three collections fails with a generic, detail-free `500` for every
-payload tried - ruled out as a permissions or field-shape problem, most likely a schema/index
-misconfiguration on those three collections specifically. Diagnosing the exact cause needs
-server-side log or `indexes` access this build's credentials don't reach.
 
 **Post images are a pasted URL, not an upload.** Verified live: `rbacCheck("file","create")`
 (both bucket creation and file upload) only allows the org-level system roles

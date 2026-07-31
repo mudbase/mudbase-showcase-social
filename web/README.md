@@ -44,20 +44,13 @@ This app expects a Mudbase project already set up with:
 
 ## Live smoke test (2026-07-31, real project, two real accounts)
 
-`posts` create/read/sort/pagination/counter-update, and both `db:create` and `db:update`
-realtime events, are all **confirmed working end-to-end** against the live backend with two
-independently registered, real-email-verified `customer` accounts (`mudhaxk+mbsocial1@gmail.com`
-"Ava Poster", `mudhaxk+mbsocial2@gmail.com` "Ben Follower" — see `plan/build-plan.md` → "Live
-smoke test results" for the full table).
-
-> **Still open:** `POST .../data` (create) on `comments`, `likes`, and `follows` currently
-> returns a generic `500 {"error":"Failed to create data"}` for every payload tried — confirmed
-> not a permissions issue (identical grant to `posts`, which works) and not a payload/field-name
-> issue (an empty body correctly 400s with the exact expected field names on all three; a
-> malformed id correctly 400s too). The failure is inside `document.save()` on the Mudbase
-> backend itself, most likely a schema/index misconfiguration specific to these three
-> collections. See `plan/build-plan.md` finding #8 for the full diagnostic — this needs
-> server-side log/index access this build's credentials don't reach.
+The entire app-to-Mudbase contract is **confirmed working end-to-end** against the live
+backend with two independently registered, real-email-verified `customer` accounts
+(`mudhaxk+mbsocial1@gmail.com` "Ava Poster", `mudhaxk+mbsocial2@gmail.com` "Ben Follower"):
+posting (with an image URL), the feed (sort/pagination), liking, commenting, following,
+follower/following counts, profile post lists, and realtime `db:create`/`db:update` events over
+a real Socket.IO connection for every collection this app touches (`posts`, `comments`, `likes`,
+`follows`). See `plan/build-plan.md` → "Live smoke test results" for the full step-by-step table.
 
 ## Known limitations (real platform constraints, verified live, not bugs)
 
