@@ -1,0 +1,38 @@
+{{define "content"}}
+<section class="composer-section">
+  {{if .IsSignedIn}}
+  <form method="post" action="/posts" class="stacked composer-form">
+    <div class="field">
+      <label for="content">Share something</label>
+      <textarea id="content" name="content" rows="3" maxlength="500" placeholder="What's on your mind?" required></textarea>
+    </div>
+    <div class="field">
+      <label for="imageUrl">Image URL (optional)</label>
+      <input type="url" id="imageUrl" name="imageUrl" placeholder="https://example.com/photo.jpg">
+    </div>
+    <button type="submit" class="button">Post</button>
+  </form>
+  {{else}}
+  <div class="composer-signin-prompt">
+    <p>Have something to share? <a href="/login">Sign in</a> to post.</p>
+  </div>
+  {{end}}
+</section>
+
+<div id="feed-body">{{template "feed_body" .}}</div>
+
+<script>
+(function () {
+  var container = document.getElementById("feed-body");
+  var page = {{.Page}};
+  function refresh() {
+    fetch("/feed/fragment?page=" + page)
+      .then(function (res) { if (!res.ok) throw new Error("refresh failed"); return res.text(); })
+      .then(function (html) { container.innerHTML = html; })
+      .catch(function () { /* keep showing the last good state; try again next tick */ })
+      .finally(function () { setTimeout(refresh, 5000); });
+  }
+  setTimeout(refresh, 5000);
+})();
+</script>
+{{end}}

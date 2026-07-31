@@ -1,0 +1,27 @@
+{{define "content"}}
+<section class="profile-header">
+  <div class="avatar avatar-lg">{{.ProfileInitials}}</div>
+  <div class="profile-header-meta">
+    <h1>{{.ProfileName}}{{if .IsOwnProfile}} <span class="muted">(you)</span>{{end}}</h1>
+    <div class="profile-stats">
+      <span><strong>{{.PostCount}}</strong> posts</span>
+      <span><strong>{{.FollowerCount}}</strong> followers</span>
+      <span><strong>{{.FollowingCount}}</strong> following</span>
+    </div>
+  </div>
+  {{if not .IsOwnProfile}}
+    {{if .IsSignedIn}}
+    <form method="post" action="/users/{{.ProfileUserID}}/follow" class="inline-form">
+      <button type="submit" class="button{{if .IsFollowing}} button-outline{{end}}">{{if .IsFollowing}}Following{{else}}Follow{{end}}</button>
+    </form>
+    {{else}}
+    <a class="button" href="/login">Follow</a>
+    {{end}}
+  {{end}}
+</section>
+
+<section class="section">
+  <h2>Posts</h2>
+  {{template "post_list" .}}
+</section>
+{{end}}

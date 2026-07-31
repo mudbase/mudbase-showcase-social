@@ -1,0 +1,112 @@
+{{/* post_card renders one PostView. Used by home.html, feed_fragment.html, and profile.html. */}}
+{{define "post_card"}}
+<article class="post-card">
+  <div class="post-head">
+    <a class="avatar" href="/users/{{.AuthorID}}">{{.AuthorInitials}}</a>
+    <div class="post-head-meta">
+      <a class="post-author" href="/users/{{.AuthorID}}">{{.AuthorName}}{{if .IsOwnPost}} <span class="muted">(you)</span>{{end}}</a>
+      <a class="post-timestamp muted" href="/posts/{{.ID}}">{{.CreatedLabel}}</a>
+    </div>
+  </div>
+  <a class="post-content-link" href="/posts/{{.ID}}">
+    <p class="post-content">{{.Content}}</p>
+    {{if .ImageURL}}<div class="post-image"><img src="{{.ImageURL}}" alt="" loading="lazy"></div>{{end}}
+  </a>
+  <div class="post-actions">
+    {{if .ViewerSignedIn}}
+    <form method="post" action="/posts/{{.ID}}/like" class="inline-form">
+      <button type="submit" class="like-button{{if .LikedByMe}} liked{{end}}" aria-pressed="{{.LikedByMe}}">
+        <span class="like-icon">{{if .LikedByMe}}&#9829;{{else}}&#9825;{{end}}</span>
+        <span>{{.LikesCount}}</span>
+      </button>
+    </form>
+    {{else}}
+    <a class="like-button" href="/login">
+      <span class="like-icon">&#9825;</span>
+      <span>{{.LikesCount}}</span>
+    </a>
+    {{end}}
+    <a class="comment-count" href="/posts/{{.ID}}#comments">
+      <span class="comment-icon">&#128172;</span>
+      <span>{{.CommentsCount}}</span>
+    </a>
+  </div>
+</article>
+{{end}}
+
+{{/* post_list renders a FeedView-shaped value (or anything with .Posts/.PostsEmpty). Used by
+     home.html and feed_fragment.html so the poll refresh and the initial render share one
+     definition. */}}
+{{define "post_list"}}
+{{if .PostsEmpty}}
+<div class="empty-state"><p>No posts yet. Be the first to share something.</p></div>
+{{else}}
+<div class="post-list">
+  {{range .Posts}}{{template "post_card" .}}{{end}}
+</div>
+{{end}}
+{{end}}
+
+{{/* comment_item renders one CommentView. Used by post_detail.html and post_detail_fragment.html. */}}
+{{define "comment_item"}}
+<li class="comment-item">
+  <a class="avatar avatar-sm" href="/users/{{.AuthorID}}">{{.AuthorInitials}}</a>
+  <div class="comment-body">
+    <div class="comment-meta">
+      <a class="comment-author" href="/users/{{.AuthorID}}">{{.AuthorName}}</a>
+      <span class="muted comment-timestamp">{{.CreatedLabel}}</span>
+    </div>
+    <p class="comment-content">{{.Content}}</p>
+  </div>
+</li>
+{{end}}
+
+{{/* feed_body renders a FeedView (post list + pagination). Used by home.html (initial render,
+     wrapped in a div the poll script replaces) and feed_fragment.html (the poll target itself) -
+     one definition shared by both so they can never drift out of sync. */}}
+{{define "feed_body"}}
+{{template "post_list" .}}
+{{if or .HasPrev .HasMore}}
+<nav class="pagination">
+  {{if .HasPrev}}<a href="/?page={{.PrevPage}}">&larr; Newer</a>{{else}}<span></span>{{end}}
+  {{if .HasMore}}<a href="/?page={{.NextPage}}">Older &rarr;</a>{{end}}
+</nav>
+{{end}}
+{{end}}
+
+{{/* post_detail_live renders the "changes over time" part of a post detail page - the like
+     button/count and the comment thread - given anything with .Post (a PostView) and
+     .Comments/.CommentsEmpty (see PostDetailView). Used by post_detail.html (wrapped in a div the
+     poll script replaces) and post_detail_fragment.html (the poll target itself). The comment
+     composer form deliberately lives outside this partial in post_detail.html, not inside it - a
+     poll-driven innerHTML replacement of a textarea the visitor is actively typing into would wipe
+     their draft, exactly the failure mode the ecommerce port's seller-orders fragment avoids by
+     keeping its own action forms outside the polled div. */}}
+{{define "post_detail_live"}}
+<div class="post-actions post-actions-detail">
+  {{if .Post.ViewerSignedIn}}
+  <form method="post" action="/posts/{{.Post.ID}}/like" class="inline-form">
+    <button type="submit" class="like-button{{if .Post.LikedByMe}} liked{{end}}" aria-pressed="{{.Post.LikedByMe}}">
+      <span class="like-icon">{{if .Post.LikedByMe}}&#9829;{{else}}&#9825;{{end}}</span>
+      <span>{{.Post.LikesCount}} {{if eq .Post.LikesCount 1}}like{{else}}likes{{end}}</span>
+    </button>
+  </form>
+  {{else}}
+  <a class="like-button" href="/login">
+    <span class="like-icon">&#9825;</span>
+    <span>{{.Post.LikesCount}} {{if eq .Post.LikesCount 1}}like{{else}}likes{{end}}</span>
+  </a>
+  {{end}}
+</div>
+
+<section class="section" id="comments">
+  <h2>{{.Post.CommentsCount}} {{if eq .Post.CommentsCount 1}}comment{{else}}comments{{end}}</h2>
+  {{if .CommentsEmpty}}
+  <p class="muted">No comments yet. Be the first to reply.</p>
+  {{else}}
+  <ul class="comment-list">
+    {{range .Comments}}{{template "comment_item" .}}{{end}}
+  </ul>
+  {{end}}
+</section>
+{{end}}

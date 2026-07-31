@@ -1,0 +1,42 @@
+{{define "content"}}
+<article class="post-detail-main">
+  <div class="post-head">
+    <a class="avatar" href="/users/{{.Post.AuthorID}}">{{.Post.AuthorInitials}}</a>
+    <div class="post-head-meta">
+      <a class="post-author" href="/users/{{.Post.AuthorID}}">{{.Post.AuthorName}}</a>
+      <span class="muted post-timestamp">{{.Post.CreatedLabel}}</span>
+    </div>
+  </div>
+  <p class="post-content post-content-detail">{{.Post.Content}}</p>
+  {{if .Post.ImageURL}}<div class="post-image post-image-detail"><img src="{{.Post.ImageURL}}" alt=""></div>{{end}}
+</article>
+
+<div id="post-live">{{template "post_detail_live" .}}</div>
+
+{{if .IsSignedIn}}
+<form method="post" action="/posts/{{.Post.ID}}/comments" class="stacked comment-form">
+  <div class="field">
+    <label for="content">Add a comment</label>
+    <textarea id="content" name="content" rows="3" maxlength="300" placeholder="Write a comment..." required></textarea>
+  </div>
+  <button type="submit" class="button">Comment</button>
+</form>
+{{else}}
+<p class="muted"><a href="/login">Sign in</a> to comment.</p>
+{{end}}
+
+<script>
+(function () {
+  var container = document.getElementById("post-live");
+  var url = "/posts/{{.Post.ID}}/fragment";
+  function refresh() {
+    fetch(url)
+      .then(function (res) { if (!res.ok) throw new Error("refresh failed"); return res.text(); })
+      .then(function (html) { container.innerHTML = html; })
+      .catch(function () { /* keep showing the last good state; try again next tick */ })
+      .finally(function () { setTimeout(refresh, 4000); });
+  }
+  setTimeout(refresh, 4000);
+})();
+</script>
+{{end}}
