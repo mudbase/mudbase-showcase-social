@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ post.author_name ~ "’s post" if post else "Post not found" }}{% endblock %}
+{% block content %}
+  {% if not post %}
+    <div class="empty-state">This post doesn't exist or was removed.</div>
+    <p style="margin-top:1rem;"><a href="/">← Back to the feed</a></p>
+  {% else %}
+    <p style="margin-bottom:1rem;"><a href="/" class="muted text-sm">← Back to the feed</a></p>
+
+    <div class="post-detail-card">
+      {% set liked = is_liked %}
+      {% set show_comment_link = false %}
+      {% include "partials/post_card.html" with context %}
+    </div>
+
+    <h2>Comments</h2>
+
+    {% if current_user and current_user.is_customer %}
+      <form method="post" action="/posts/{{ post.id }}/comments" class="comment-composer">
+        <textarea name="content" maxlength="300" placeholder="Write a comment…" aria-label="Write a comment" required></textarea>
+        <button type="submit" class="btn btn-primary btn-sm">Reply</button>
+      </form>
+    {% else %}
+      <p class="muted text-sm">
+        <a href="/login?next=/posts/{{ post.id }}">Sign in</a> to join the conversation.
+      </p>
+    {% endif %}
+
+    {% if not comments %}
+      <div class="empty-state" style="margin-top:1rem;">No comments yet — be the first to reply.</div>
+    {% else %}
+      <div class="comment-list">
+        {% for comment in comments %}
+          <div class="comment-item">
+            <a class="avatar avatar-sm" href="/users/{{ comment.author_id }}">{{ comment.author_name | initial }}</a>
+            <div class="comment-body">
+              <a class="comment-author" href="/users/{{ comment.author_id }}">{{ comment.author_name }}</a>
+              <span class="comment-time">{{ comment.created_at | relative_time }}</span>
+              <p class="comment-content">{{ comment.content }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endif %}
+{% endblock %}

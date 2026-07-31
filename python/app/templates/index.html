@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Feed{% endblock %}
+{% block content %}
+  <div class="section-head" style="flex-direction: column; align-items: flex-start; gap: 0.35rem;">
+    <h1>Feed</h1>
+    <p class="muted text-sm">
+      Every post, like, comment, and follow on this page is served by a real Mudbase project,
+      through the real Mudbase Python SDK — no hand-rolled backend.
+    </p>
+  </div>
+
+  {% if current_user and current_user.is_customer %}
+    <form method="post" action="/posts" class="card composer">
+      <div class="card-body">
+        <div class="form-group">
+          <label for="content">Share something</label>
+          <textarea id="content" name="content" maxlength="500" placeholder="What's happening?" required></textarea>
+          {% if errors.content %}<p class="field-error">{{ errors.content }}</p>{% endif %}
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label for="image_url">Image URL (optional)</label>
+          <input type="url" id="image_url" name="image_url" placeholder="https://..." />
+          {% if errors.image_url %}<p class="field-error">{{ errors.image_url }}</p>{% endif %}
+        </div>
+        <div class="composer-actions">
+          <span class="char-count">Up to 500 characters</span>
+          <button type="submit" class="btn btn-primary">Post</button>
+        </div>
+      </div>
+    </form>
+  {% else %}
+    <div class="card composer">
+      <div class="card-body" style="display:flex; align-items:center; justify-content:space-between; gap:1rem;">
+        <span class="muted text-sm">Sign in to share something with the feed.</span>
+        <a class="btn btn-primary btn-sm" href="/login?next=/">Sign in</a>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if load_error %}
+    <p class="error-state">{{ load_error }}</p>
+  {% elif not posts %}
+    <div class="empty-state">No posts yet — be the first to share something.</div>
+  {% else %}
+    <div class="feed-list">
+      {% for post in posts %}
+        {% set liked = post.id in liked_post_ids %}
+        {% include "partials/post_card.html" with context %}
+      {% endfor %}
+    </div>
+
+    {% if pagination %}
+      <div class="pagination-row">
+        {% if page > 1 %}
+          <a class="btn btn-outline btn-sm" href="/?page={{ page - 1 }}">← Newer</a>
+        {% else %}
+          <span></span>
+        {% endif %}
+        <span class="muted text-sm">Page {{ page }} of {{ pagination.total_pages }} · {{ pagination.total }} posts</span>
+        {% if pagination.has_more %}
+          <a class="btn btn-outline btn-sm" href="/?page={{ page + 1 }}">Older →</a>
+        {% else %}
+          <span></span>
+        {% endif %}
+      </div>
+    {% endif %}
+  {% endif %}
+{% endblock %}

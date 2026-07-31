@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ stats.display_name if stats else "Profile" }}{% endblock %}
+{% block content %}
+  {% if load_error %}
+    <p class="error-state">{{ load_error }}</p>
+  {% elif stats %}
+    <div class="profile-header">
+      <div class="avatar">{{ stats.display_name | initial }}</div>
+      <div>
+        <h1 class="profile-name">{{ stats.display_name }}</h1>
+        <div class="profile-stats">
+          <span><strong>{{ stats.post_count }}</strong> posts</span>
+          <span><strong>{{ stats.follower_count }}</strong> followers</span>
+          <span><strong>{{ stats.following_count }}</strong> following</span>
+        </div>
+      </div>
+      {% if not is_own_profile %}
+        <div class="profile-actions">
+          {% if current_user and current_user.is_customer %}
+            <form method="post" action="/users/{{ profile_user_id }}/follow">
+              <button type="submit" class="btn {{ 'btn-outline' if is_following else 'btn-primary' }} btn-sm">
+                {{ "Following" if is_following else "Follow" }}
+              </button>
+            </form>
+          {% else %}
+            <a class="btn btn-primary btn-sm" href="/login?next=/users/{{ profile_user_id }}">Follow</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+    {% if not user_posts %}
+      <div class="empty-state">No posts yet.</div>
+    {% else %}
+      <div class="feed-list">
+        {% for post in user_posts %}
+          {% set liked = post.id in liked_post_ids %}
+          {% include "partials/post_card.html" with context %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endif %}
+{% endblock %}
