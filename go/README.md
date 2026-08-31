@@ -1,7 +1,7 @@
-# Mudbase Showcase — Social (Go)
+# Mudbase Showcase - Social (Go)
 
-A realtime-ish social micro-blog built **entirely on [Mudbase](https://www.mudbase.dev)** — auth,
-database, and (via polling) realtime — with **zero custom backend**, reimplemented as a
+A realtime-ish social micro-blog built **entirely on [Mudbase](https://www.mudbase.dev)** - auth,
+database, and (via polling) realtime - with **zero custom backend**, reimplemented as a
 server-rendered Go app against the official Mudbase Go SDK. This is a sibling port of the
 reference Next.js app (`../web`) and of `mudbase-showcase-ecommerce/go`, whose framework
 (net/http + chi + `html/template`, cookie-based session, the 401 → refresh → retry pattern) this

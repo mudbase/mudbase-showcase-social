@@ -5,7 +5,7 @@ import type { Comment } from "@/api/schemas";
 
 export function CommentList({ comments }: { comments: Comment[] }): React.JSX.Element {
   if (comments.length === 0) {
-    return <Text className="py-6 text-center text-sm text-muted-foreground">No comments yet — start the conversation.</Text>;
+    return <Text className="py-6 text-center text-sm text-muted-foreground">No comments yet - start the conversation.</Text>;
   }
 
   return (

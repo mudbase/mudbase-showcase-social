@@ -2,7 +2,7 @@ import { io, type Socket } from "socket.io-client";
 import { MUDBASE_URL } from "@/config/env";
 
 /**
- * Ported faithfully from web/src/lib/mudbase-socket.ts — same
+ * Ported faithfully from web/src/lib/mudbase-socket.ts - same
  * `subscribe:collection` / `db:create` / `db:update` Socket.IO contract,
  * confirmed live against this exact project in web/plan/build-plan.md's "Live
  * smoke test results". `socket.io-client` works unmodified in React Native:

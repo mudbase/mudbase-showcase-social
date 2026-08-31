@@ -9,7 +9,7 @@
 
 <main class="container feed-container">
   <h1 class="page-title">Pulse</h1>
-  <p class="lede">Every post, like, comment, and follow on this page is served by a real Mudbase project — no custom backend at all. Browse freely; sign in to join the conversation.</p>
+  <p class="lede">Every post, like, comment, and follow on this page is served by a real Mudbase project - no custom backend at all. Browse freely; sign in to join the conversation.</p>
 
   <div class="card card-pad composer" th:if="${isSignedIn}">
     <form method="post" th:action="@{/posts}" th:object="${postComposerRequest}" novalidate>
@@ -35,7 +35,7 @@
   </div>
 
   <div th:if="${posts.isEmpty()}" class="empty-state">
-    <p>No posts yet — be the first to say something.</p>
+    <p>No posts yet - be the first to say something.</p>
   </div>
 
   <div th:unless="${posts.isEmpty()}" class="post-list">

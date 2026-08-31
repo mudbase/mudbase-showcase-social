@@ -14,7 +14,7 @@ interface FeedPage {
 }
 type FeedData = InfiniteData<FeedPage, number>;
 
-/** Paginated feed, newest first — mirrors web/src/hooks/usePostsFeed.ts's usePostsFeed. */
+/** Paginated feed, newest first - mirrors web/src/hooks/usePostsFeed.ts's usePostsFeed. */
 export function usePostsFeed() {
   return useInfiniteQuery<FeedPage, Error, FeedData, typeof FEED_QUERY_KEY, number>({
     queryKey: FEED_QUERY_KEY,

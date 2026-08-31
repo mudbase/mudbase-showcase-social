@@ -54,7 +54,7 @@ export function PostComposer(): React.JSX.Element {
     setImageNotice(null);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setImageNotice("Photo library access was denied — enable it in Settings to attach an image.");
+      setImageNotice("Photo library access was denied - enable it in Settings to attach an image.");
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -92,7 +92,7 @@ export function PostComposer(): React.JSX.Element {
         const message =
           err instanceof MudbaseApiError
             ? err.message
-            : "Image upload failed — posting without the photo.";
+            : "Image upload failed - posting without the photo.";
         setImageNotice(message);
       } finally {
         setIsUploadingImage(false);

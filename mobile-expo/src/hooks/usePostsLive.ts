@@ -16,7 +16,7 @@ interface RowEvent {
 /**
  * Live feed: subscribes to the `posts` collection's Socket.IO room so a post
  * created or liked/commented-on by someone else appears (or updates)
- * immediately, with no polling — ported from web/src/hooks/usePostsLive.ts,
+ * immediately, with no polling - ported from web/src/hooks/usePostsLive.ts,
  * same `subscribe:collection` / `db:create` / `db:update` contract confirmed
  * live against this exact project (see ../plan/build-plan.md).
  */

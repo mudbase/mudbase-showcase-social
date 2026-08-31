@@ -9,7 +9,7 @@ interface ListParams {
   limit?: number;
 }
 
-/** Generic list-documents hook — mirrors web/src/hooks/useCollection.ts, backed by the real DataApi. */
+/** Generic list-documents hook - mirrors web/src/hooks/useCollection.ts, backed by the real DataApi. */
 export function useDocuments<T>(
   schema: z.ZodType<T>,
   collectionId: string,

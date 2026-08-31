@@ -12,7 +12,7 @@ export default function FeedScreen(): React.JSX.Element {
             <View className="gap-1">
               <Text className="text-2xl font-semibold text-foreground">Feed</Text>
               <Text className="text-sm text-muted-foreground">
-                Every post, like, comment, and follow here is served by a real Mudbase project — no custom backend.
+                Every post, like, comment, and follow here is served by a real Mudbase project - no custom backend.
               </Text>
             </View>
             <PostComposer />

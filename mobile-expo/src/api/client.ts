@@ -6,21 +6,21 @@ import { secureStorage, STORAGE_KEYS } from "./secureStorage";
 import { authResultSchema, mudbaseUserSchema, type AuthResult, type MudbaseUser } from "./schemas";
 
 /**
- * Thin, typed wrapper around the real generated `mudbase-sdk` — same mechanism
+ * Thin, typed wrapper around the real generated `mudbase-sdk` - same mechanism
  * the sibling `mudbase-showcase-ecommerce/mobile-expo` port uses: real
  * generated `*Api` class instances (`AuthenticationApi`/`DataApi`), not a
  * unified client the SDK doesn't ship. Every generated method takes a single
  * `requestParameters` object (e.g. `loginLocalUser({ loginLocalUserRequest: {...} })`),
- * NOT the positional arguments shown in the SDK's docs/*.md examples — those
+ * NOT the positional arguments shown in the SDK's docs/*.md examples - those
  * examples were generated from an older calling convention and no longer match
  * the actual `dist/api.js` class methods in the currently vendored SDK build.
  * Calling positionally throws a client-side `RequiredError` before any request
- * reaches the network — verified the hard way while building the ecommerce
+ * reaches the network - verified the hard way while building the ecommerce
  * port, so this file follows the object-parameter convention throughout.
  *
  * This file adds on top of the generated SDK: token storage (SecureStore,
  * never AsyncStorage), a single-retry-on-401 refresh with in-flight dedupe
- * (ported faithfully from web/src/lib/mudbase.ts's `refreshInFlight` pattern —
+ * (ported faithfully from web/src/lib/mudbase.ts's `refreshInFlight` pattern -
  * refresh tokens rotate on every use and a reused one revokes the whole
  * session, so concurrent 401s must share one refresh call, never race), and
  * zod-validated narrowing of the generated response types where they
@@ -76,7 +76,7 @@ class MudbaseClient {
   private readonly authApi = new AuthenticationApi(this.configuration);
   private readonly dataApi = new DataApi(this.configuration);
 
-  /** True for both a real signed-in customer and a bootstrap guest — see isRealUser() for the distinction the UI cares about. */
+  /** True for both a real signed-in customer and a bootstrap guest - see isRealUser() for the distinction the UI cares about. */
   isAuthenticated(): boolean {
     return this.token !== null;
   }
@@ -118,14 +118,14 @@ class MudbaseClient {
   /**
    * Mudbase access tokens are short-lived (~30 min). Refresh tokens rotate on
    * every use and a reused one revokes the session (platform reuse-detection)
-   * — this in-flight promise is shared across concurrent 401s to guarantee at
+   * - this in-flight promise is shared across concurrent 401s to guarantee at
    * most one refresh call per expiry, never a stampede that would trip
    * reuse-detection itself. Faithful port of web/src/lib/mudbase.ts's
    * `refreshAccessToken()` / `refreshInFlight`.
    */
   private async refreshSession(): Promise<void> {
     if (!this.refreshTokenValue) {
-      throw new MudbaseApiError("No refresh token available — sign in again.", 401);
+      throw new MudbaseApiError("No refresh token available - sign in again.", 401);
     }
     if (!this.refreshing) {
       this.refreshing = (async (): Promise<void> => {
@@ -161,12 +161,12 @@ class MudbaseClient {
   // ─── Auth ─────────────────────────────────────────────────────────────────
 
   /**
-   * Every collection read requires *some* JWT — verified live against this
+   * Every collection read requires *some* JWT - verified live against this
    * exact project (see ../plan/build-plan.md finding #3): an anonymous session
    * satisfies that without forcing a login screen on first launch, exactly
    * like the web reference app's guest-browsing bootstrap. Posting, liking,
    * commenting, and following still require a real, verified customer account
-   * — enforced both by Mudbase's own collection permissions and by this app's
+   * - enforced both by Mudbase's own collection permissions and by this app's
    * `isRealUser()` UI gate.
    */
   async createAnonymousSession(): Promise<MudbaseUser> {
@@ -213,7 +213,7 @@ class MudbaseClient {
     try {
       await this.authApi.logoutLocalUser();
     } catch {
-      // Best-effort server-side revoke — always clear local tokens regardless.
+      // Best-effort server-side revoke - always clear local tokens regardless.
     } finally {
       await this.clearTokens();
     }
@@ -305,15 +305,15 @@ class MudbaseClient {
    *
    * 1. `rbacCheck("file","create")` (both bucket listing-with-intent-to-upload
    *    and file upload) only allows the org-level system roles
-   *    owner/admin/developer. Every project end-user — including a real,
-   *    verified `customer` account — always carries system role `viewer`.
+   *    owner/admin/developer. Every project end-user - including a real,
+   *    verified `customer` account - always carries system role `viewer`.
    *    A live check against this exact project during this build returned
-   *    `buckets: []` for a customer-role JWT (empty, not 403 — the list call
+   *    `buckets: []` for a customer-role JWT (empty, not 403 - the list call
    *    itself is reachable, but no bucket is visible/writable at this role),
    *    consistent with that constraint.
    * 2. The generated `mudbase-sdk`'s `FilesApi.uploadFiles()` JSON-stringifies
    *    the `files` array into a single `Blob` rather than appending real
-   *    multipart file parts (see its generated `dist/api.js` — a known
+   *    multipart file parts (see its generated `dist/api.js` - a known
    *    OpenAPI-Generator gap for binary/multipart bodies, the same reason
    *    web/src/lib/mudbase.ts hand-rolls its own `uploadFile()` via raw
    *    `fetch` instead of going through a generated method). This method does
@@ -322,7 +322,7 @@ class MudbaseClient {
    *    method for this one endpoint only.
    *
    * Given (1), this call is expected to fail for both provisioned test
-   * accounts today — the composer catches that and lets the user continue
+   * accounts today - the composer catches that and lets the user continue
    * with a text-only post rather than blocking on it. Kept fully implemented
    * (not a stub) for API-contract completeness and in case the org grants a
    * bucket-capable role in the future, exactly the posture the reference web
@@ -341,14 +341,14 @@ class MudbaseClient {
     const bucketId = bucketsBody.buckets?.[0]?._id;
     if (!bucketId) {
       throw new MudbaseApiError(
-        "No storage bucket is reachable from this account's role — see README 'Known limitations'.",
+        "No storage bucket is reachable from this account's role - see README 'Known limitations'.",
         403,
       );
     }
 
     const form = new FormData();
     // React Native's FormData accepts this `{ uri, name, type }` shape directly (unlike web's
-    // File/Blob) — this is the RN-native equivalent of the generated SDK's (broken) file part.
+    // File/Blob) - this is the RN-native equivalent of the generated SDK's (broken) file part.
     form.append("files", { uri: asset.uri, name: asset.name, type: asset.mimeType } as unknown as Blob);
     form.append("isPublic", "true");
 

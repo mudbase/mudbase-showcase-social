@@ -1,19 +1,19 @@
-# Mudbase Showcase — Social (PHP)
+# Mudbase Showcase - Social (PHP)
 
-A realtime social micro-blog built **entirely on [Mudbase](https://www.mudbase.dev)** — auth,
-database, and (where applicable) realtime — with **zero custom backend**, reimplemented as a
+A realtime social micro-blog built **entirely on [Mudbase](https://www.mudbase.dev)** - auth,
+database, and (where applicable) realtime - with **zero custom backend**, reimplemented as a
 plain, server-rendered PHP application. This is a port of the reference Next.js app in `../web`;
 see that project for the canonical data model and API contract.
 
 ## Stack
 
-Plain PHP 8.1+ (no framework — no Laravel/Symfony), PHP's built-in dev server for local
+Plain PHP 8.1+ (no framework - no Laravel/Symfony), PHP's built-in dev server for local
 development, and the real generated `mudbase/sdk` Composer package (the same SDK used by the
-sibling `mudbase-showcase-ecommerce/php` port — this project mirrors that port's architecture:
+sibling `mudbase-showcase-ecommerce/php` port - this project mirrors that port's architecture:
 `Router` → `Controllers` → `View` + plain `.php` view files, a request-scoped `AppContext`, and a
 `MudbaseClient` wrapper around the SDK).
 
-Auth is session-based: the Mudbase JWT pair lives in native PHP `$_SESSION`, not `localStorage` —
+Auth is session-based: the Mudbase JWT pair lives in native PHP `$_SESSION`, not `localStorage` -
 there is no client-side JavaScript auth flow at all in this app.
 
 ## What it demonstrates
@@ -30,38 +30,38 @@ there is no client-side JavaScript auth flow at all in this app.
 | Follow / unfollow | Ownership-scoped create/delete, check-then-act | `src/Controllers/ProfileController.php` |
 | Profile (posts, follower/following counts) | Filtered reads + `pagination.total` as a count | `src/Support/SocialLookups.php` |
 
-## Known limitations (real platform constraints, not bugs — inherited from the reference app)
+## Known limitations (real platform constraints, not bugs - inherited from the reference app)
 
 - **Post images are a pasted URL, not a file upload.** `rbacCheck("file","create")` (both bucket
   creation and file upload) only allows the org-level system roles owner/admin/developer. Every
-  project end-user — including a real, verified `customer` account — always carries system role
+  project end-user - including a real, verified `customer` account - always carries system role
   `viewer`. `MudbaseClient` does not implement `uploadFile()` at all here (unlike the ecommerce
   port) since nothing in this app's UI could ever call it successfully.
 - **No realtime.** The reference Next.js app subscribes to `posts`/`comments`/`likes`/`follows`
   over Socket.IO for live updates. The generated PHP SDK ships no realtime client, and a
-  server-rendered app has no persistent connection to attach one to — a normal page reload or
+  server-rendered app has no persistent connection to attach one to - a normal page reload or
   redirect-after-write shows the latest state instead. See `plan/build-plan.md` for the fuller
   rationale (matches the ecommerce PHP port's own position on this).
 - **The generated SDK hard-caps every list query's `limit` at 100 client-side** (confirmed by
-  reading `DataApi::listDataRequest()` — `\InvalidArgumentException` for anything higher).
+  reading `DataApi::listDataRequest()` - `\InvalidArgumentException` for anything higher).
   `MudbaseClient::listDocuments()` silently clamps to this; every caller in this app already
   operates at demo scale, where 100 rows is functionally unbounded.
 - **No `users` collection, so profile display names are best-effort.** A user who has never posted
-  and has no followers has no row anywhere recording their name — `/users/{userId}` falls back to
+  and has no followers has no row anywhere recording their name - `/users/{userId}` falls back to
   the literal string "Member" in that case. See `Support/SocialLookups::resolveDisplayName()`.
 - **No in-app email-verification resend.** The resend endpoint requires a valid JWT, which an
-  unverified account cannot obtain (login is blocked until verified) — there is no accessible way
+  unverified account cannot obtain (login is blocked until verified) - there is no accessible way
   around this from a project end-user's own permissions.
 
 ## Multi-step flow consistency
 
 Two write flows PATCH a denormalized counter on `posts` after a primary write. Both are designed
 so a failure partway through never leaves the app claiming success while the data is actually
-half-applied — see `plan/build-plan.md` "Multi-step flow consistency" for the full reasoning:
+half-applied - see `plan/build-plan.md` "Multi-step flow consistency" for the full reasoning:
 
 - **Like/unlike** rolls the just-created `likes` row back if the follow-up `likesCount` PATCH
   fails, rather than leaving an orphaned like that never counts.
-- **Comment creation** never rolls back a comment that already saved — a counter-PATCH failure
+- **Comment creation** never rolls back a comment that already saved - a counter-PATCH failure
   surfaces as "your comment posted, but the count may be briefly stale," not a false "everything
   worked" message, and not destruction of real user content either.
 
@@ -71,7 +71,7 @@ This app expects a Mudbase project already provisioned with:
 
 1. Local auth enabled, with email verification required.
 2. The Multi-Role feature's default `customer` role (this project's single application role).
-3. Four collections — `posts`, `comments`, `likes`, `follows` — with the field shapes documented in
+3. Four collections - `posts`, `comments`, `likes`, `follows` - with the field shapes documented in
    `plan/build-plan.md`, and the `customer` role granted `create`/`read`/`update`/`delete`,
    `dataScope: "all"`, on all four.
 
@@ -108,7 +108,7 @@ Run against the live, already-provisioned project (`6a6cf79dd07caabbbdfbe9c5`) w
 One write flow (re-following the same user, to restore state after the unfollow test above) could
 not be completed in this session: the shared test account's refresh token was invalidated
 mid-session by Mudbase's reuse-detection ("Session has been invalidated. Please sign in again.").
-This is expected — the same two fallback test accounts in this task are shared across all 10
+This is expected - the same two fallback test accounts in this task are shared across all 10
 concurrent language/platform ports of this showcase being built at the same time, and refresh
 tokens are single-use or by design (rotate-on-use, invalidate-the-family-on-reuse). The
 create/delete code path exercised by follow/unfollow is identical to the already-verified
@@ -121,7 +121,7 @@ credential-contention artifact of concurrent testing, not a defect in this app.
 - Open-redirect guard (`Response::redirectToSafe()`) on every caller-supplied `redirectTo` value
   (like/follow/comment/login/register all carry the visitor back to wherever they clicked from).
 - Session id regenerated on every privilege change (login, register).
-- All dynamic output escaped via `View::escape()` — no raw interpolation of user content anywhere.
+- All dynamic output escaped via `View::escape()` - no raw interpolation of user content anywhere.
 - Authorization is enforced server-side by Mudbase's own collection permissions; this app's
   `isSignedIn()` checks are UX gating (redirect to `/login`), not the security boundary.
 

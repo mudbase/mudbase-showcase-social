@@ -5,7 +5,7 @@
     <h1>Feed</h1>
     <p class="muted text-sm">
       Every post, like, comment, and follow on this page is served by a real Mudbase project,
-      through the real Mudbase Python SDK — no hand-rolled backend.
+      through the real Mudbase Python SDK - no hand-rolled backend.
     </p>
   </div>
 
@@ -40,7 +40,7 @@
   {% if load_error %}
     <p class="error-state">{{ load_error }}</p>
   {% elif not posts %}
-    <div class="empty-state">No posts yet — be the first to share something.</div>
+    <div class="empty-state">No posts yet - be the first to share something.</div>
   {% else %}
     <div class="feed-list">
       {% for post in posts %}

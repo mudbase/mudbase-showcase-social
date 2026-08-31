@@ -6,7 +6,7 @@ const FONT_SIZE: Record<"sm" | "md" | "lg", number> = { sm: 12, md: 14, lg: 18 }
 
 // Deterministic hue from name so the same person always renders the same color across screens,
 // without needing a stored avatar/color field on any collection (none of posts/comments/likes/
-// follows carry one — see ../plan/build-plan.md "Data model").
+// follows carry one - see ../plan/build-plan.md "Data model").
 function hueForName(name: string): number {
   let hash = 0;
   for (let i = 0; i < name.length; i += 1) {

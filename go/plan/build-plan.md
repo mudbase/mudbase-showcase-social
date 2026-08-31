@@ -1,4 +1,4 @@
-# Build Plan — Mudbase Showcase: Social (Go port)
+# Build Plan - Mudbase Showcase: Social (Go port)
 Generated: 2026-07-31
 Mode: port (one of 10 language/platform ports of `web/`, the reference Next.js implementation)
 Type: server-rendered web (fullstack via BaaS, no custom backend)
@@ -40,7 +40,7 @@ Mudbase (cloud.mudbase.dev) via the official `github.com/mudbase/mudbase-sdk/go`
   post composer forms deliberately live *outside* the polled div so a poll-driven refresh never
   wipes text the visitor is actively typing.
 
-## Data Models (Mudbase Collections — already provisioned, used as-is, not recreated)
+## Data Models (Mudbase Collections - already provisioned, used as-is, not recreated)
 
 Identical schema to `web/plan/build-plan.md` - see that file for the full provisioning history
 (role permissions grant, the Atlas 500-collection-cap incident) - restated here only as this app's

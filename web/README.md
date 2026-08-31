@@ -1,7 +1,7 @@
-# Mudbase Showcase — Social (web)
+# Mudbase Showcase - Social (web)
 
-A realtime social micro-blog built **entirely on [Mudbase](https://www.mudbase.dev)** — auth,
-database, and realtime — with **zero custom backend**. This is the reference implementation for
+A realtime social micro-blog built **entirely on [Mudbase](https://www.mudbase.dev)** - auth,
+database, and realtime - with **zero custom backend**. This is the reference implementation for
 this showcase: the other 9 language/platform ports (see the repo root README) are built to match
 this app's data model and API contract.
 
@@ -9,7 +9,7 @@ this app's data model and API contract.
 
 Next.js 15 (App Router) + TypeScript (strict) + Tailwind + shadcn/ui + TanStack Query, talking
 directly to `cloud.mudbase.dev` from the browser. There is no server-side code in this app at
-all — no Route Handlers, no server actions that call Mudbase with a privileged credential. Every
+all - no Route Handlers, no server actions that call Mudbase with a privileged credential. Every
 request (including file-adjacent ones, see "Known limitations") is made with the signed-in user's
 own JWT.
 
@@ -33,12 +33,12 @@ own JWT.
 This app expects a Mudbase project already set up with:
 
 1. Local auth enabled, with email verification required (this app's UI assumes it is).
-2. The Multi-Role feature's default `customer` role (Mudbase's single-role starter template —
+2. The Multi-Role feature's default `customer` role (Mudbase's single-role starter template -
    there is no separate seller/admin role in this app).
-3. Four collections — `posts`, `comments`, `likes`, `follows` — with the field shapes documented
+3. Four collections - `posts`, `comments`, `likes`, `follows` - with the field shapes documented
    in `plan/build-plan.md`, and the `customer` role granted `create`/`read`/`update`/`delete`,
    `dataScope: "all"`, on all four (confirmed live via `GET /api/projects/{id}/
-   permissions-matrix` — see `plan/build-plan.md` finding #7).
+   permissions-matrix` - see `plan/build-plan.md` finding #7).
 
 `.env.example` lists every ID this app needs once that's done.
 
@@ -56,15 +56,15 @@ a real Socket.IO connection for every collection this app touches (`posts`, `com
 
 **Post images are a pasted URL, not a file upload.** `rbacCheck("file","create")` (both bucket
 creation and file upload) only allows the org-level system roles owner/admin/developer. Every
-project end-user — including a real, verified `customer` account — always carries system role
+project end-user - including a real, verified `customer` account - always carries system role
 `viewer`, confirmed with a real anonymous-session bucket-create attempt (`403`,
 `"required":["owner","admin","developer"],"current":"viewer"`). `src/lib/mudbase.ts` still
-implements `uploadFile()` for API-contract completeness, but no UI in this app calls it — the
+implements `uploadFile()` for API-contract completeness, but no UI in this app calls it - the
 composer uses a plain URL text input instead. Same real constraint the ecommerce showcase
 documents for product images.
 
 **The project's `pk_` publishable key is not a working credential on this backend.** Tried as
-both `X-API-Key` and `Authorization: Bearer` — 401 either way. `authOrApiKey` only recognizes
+both `X-API-Key` and `Authorization: Bearer` - 401 either way. `authOrApiKey` only recognizes
 `ak_`-prefixed keys issued via the org-level API Keys feature; the `pk_` field shown in the
 project dashboard is a separate, legacy mechanism with no corresponding auth check in this
 backend version. Every request in this app authenticates with a JWT instead (see
@@ -72,11 +72,11 @@ backend version. Every request in this app authenticates with a JWT instead (see
 dashboard, not because anything reads it.
 
 **No `users` collection, so profile display names are best-effort.** A user who has never posted
-and has no followers has no row anywhere recording their name — `/users/[userId]` falls back to
+and has no followers has no row anywhere recording their name - `/users/[userId]` falls back to
 the literal string "Member" in that case. See `useResolvedDisplayName` and `plan/build-plan.md`.
 
 **No in-app email-verification resend.** The resend endpoint requires a valid JWT, which an
-unverified account cannot obtain (login is blocked until verified) — there is no accessible way
+unverified account cannot obtain (login is blocked until verified) - there is no accessible way
 around this from a project end-user's own permissions. If a verification email doesn't arrive,
 the only recourse today is registering again.
 
@@ -91,4 +91,4 @@ npm run dev
 ## Deploy
 
 Every env var in `.env.example` is `NEXT_PUBLIC_` and safe to set directly as a Vercel
-Production/Preview environment variable — there is no server-only secret anywhere in this app.
+Production/Preview environment variable - there is no server-only secret anywhere in this app.

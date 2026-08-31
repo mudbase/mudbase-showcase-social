@@ -4,7 +4,7 @@ import { z } from "zod";
  * Runtime validation for every Mudbase response shape this app touches.
  *
  * Several of the generated `mudbase-sdk` response models under-describe the
- * real JSON the platform returns — e.g. `CreateAnonymousSession200ResponseUser`
+ * real JSON the platform returns - e.g. `CreateAnonymousSession200ResponseUser`
  * and `LoginLocalUser200ResponseUser` both omit `customRole`, even though the
  * live API includes it on every project-scoped session response (verified by
  * the reference web app at web/src/lib/mudbase.ts's `UserObject` interface,

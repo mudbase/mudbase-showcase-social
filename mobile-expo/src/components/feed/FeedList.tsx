@@ -38,7 +38,7 @@ export function FeedList({ ListHeaderComponent }: { ListHeaderComponent?: ReactE
     </View>
   ) : (
     <View className="items-center py-16">
-      <Text className="text-sm text-muted-foreground">No posts yet — be the first to share something.</Text>
+      <Text className="text-sm text-muted-foreground">No posts yet - be the first to share something.</Text>
     </View>
   );
 

@@ -20,7 +20,7 @@ function messageFrom(err: unknown, fallback: string): string {
 }
 
 /**
- * A plain in-memory zustand store, not persisted via MMKV/AsyncStorage — the
+ * A plain in-memory zustand store, not persisted via MMKV/AsyncStorage - the
  * only durable state is the token pair in SecureStore (mudbaseClient owns
  * that). Mirrors web/src/lib/mudbase-provider.tsx's bootstrap: every cold
  * start (and every logout) ends with *some* session established - a real

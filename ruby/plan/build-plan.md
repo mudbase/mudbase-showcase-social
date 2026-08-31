@@ -1,4 +1,4 @@
-# Build Plan — Mudbase Showcase: Social (Ruby / Sinatra port)
+# Build Plan - Mudbase Showcase: Social (Ruby / Sinatra port)
 
 Generated: 2026-07-31
 Mode: brownfield port (one of several per-language reimplementations of the reference Next.js app)
@@ -26,20 +26,20 @@ Stack: Ruby 3.1+/4.0 + Sinatra 4 + ERB + Rack::Session::Cookie, backed entirely 
   (`with_read_token`, backed by `ensure_guest_session!` / `AuthService.login_anonymous!`)
   alongside the ecommerce port's original `with_access_token` (kept, used for every write).
 
-## Data Models (Mudbase Collections — already provisioned, used as-is)
+## Data Models (Mudbase Collections - already provisioned, used as-is)
 
 Same project (`6a6cf79dd07caabbbdfbe9c5`) and same four collections the reference Next.js app
 and every other language port use:
 
-- **posts** (`6a6cf7d0d07caabbbdfbe9db`) — `authorId`, `authorName`, `content`, `imageUrl?`,
+- **posts** (`6a6cf7d0d07caabbbdfbe9db`) - `authorId`, `authorName`, `content`, `imageUrl?`,
   `likesCount`, `commentsCount`. `lib/mudbase/posts_repo.rb`.
-- **comments** (`6a6cf7d1d07caabbbdfbe9f1`) — `postId`, `authorId`, `authorName`, `content`.
+- **comments** (`6a6cf7d1d07caabbbdfbe9f1`) - `postId`, `authorId`, `authorName`, `content`.
   Sorted `createdAt` ascending (oldest-first thread order). `lib/mudbase/comments_repo.rb`.
-- **likes** (`6a6cf81ed07caabbbdfbea20`) — `postId`, `userId`. No compound unique index;
+- **likes** (`6a6cf81ed07caabbbdfbea20`) - `postId`, `userId`. No compound unique index;
   uniqueness enforced at the application layer via check-then-act
   (`LikesRepo.find_one` immediately before create/delete in `app/routes/posts_routes.rb`'s
   `POST /posts/:id/like`). `lib/mudbase/likes_repo.rb`.
-- **follows** (`6a6cf81ed07caabbbdfbea32`) — `followerId`, `followingId`, `followingName?`
+- **follows** (`6a6cf81ed07caabbbdfbea32`) - `followerId`, `followingId`, `followingName?`
   (denormalized at write time - no `users` collection exists). Same check-then-act guard.
   `lib/mudbase/follows_repo.rb`.
 
@@ -81,14 +81,14 @@ Both the real-user session (`session[:token]`/`session[:refresh_token]`/`session
 security posture as the ecommerce port.
 
 `lib/session_helpers.rb` exposes two wrappers:
-- `with_access_token` — requires a real signed-in user (redirects to `/login` otherwise via
+- `with_access_token` - requires a real signed-in user (redirects to `/login` otherwise via
   `require_login!` at the route level); proactively refreshes within 60s of expiry, reactively
   refreshes-and-retries exactly once on a real 401.
-- `with_read_token` — uses the real user's token if signed in, otherwise transparently
+- `with_read_token` - uses the real user's token if signed in, otherwise transparently
   establishes (or refreshes) a guest session; same 401-retry behavior, re-minting a fresh guest
   session if the guest token itself gets rejected.
 
-## Realtime — explicitly not implemented (known limitation, matches sibling port's own scoping)
+## Realtime - explicitly not implemented (known limitation, matches sibling port's own scoping)
 
 The reference Next.js app subscribes to Mudbase's Socket.IO `subscribe:collection` room from
 the browser using the signed-in user's own JWT (`usePostsLive.ts`). This Ruby app is entirely

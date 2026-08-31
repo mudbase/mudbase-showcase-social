@@ -1,7 +1,7 @@
 const MUDBASE_BASE_URL = "https://cloud.mudbase.dev"
 
 /**
- * This project ships Mudbase's single default starter application role — slug "customer",
+ * This project ships Mudbase's single default starter application role - slug "customer",
  * signupEndpoint "customer" (verified live against cloud.mudbase.dev on 2026-07-31: signup
  * against "user" 404s with "Role not found", signup against "customer" succeeds). There is
  * only one role in this app (no customer/seller split like the ecommerce showcase), so it is
@@ -19,7 +19,7 @@ export interface RegisterParams {
   password: string
   firstName: string
   lastName: string
-  /** Required by Mudbase's registration validator — a direct API call without it is rejected. */
+  /** Required by Mudbase's registration validator - a direct API call without it is rejected. */
   agreedToTerms: boolean
 }
 
@@ -36,7 +36,7 @@ export interface AuthResponse {
   user: UserObject
   /**
    * True when the project requires email verification before login (verified live: this
-   * project does — registration returns 201 with no token, and login 403s with
+   * project does - registration returns 201 with no token, and login 403s with
    * EMAIL_VERIFICATION_REQUIRED until the link is followed). Callers must not treat a
    * successful register() as a signed-in session when this is true.
    */

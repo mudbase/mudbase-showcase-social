@@ -9,7 +9,7 @@ const FALLBACK_ICON_COLOR = "#181c25";
  * `ColorValue`, while lucide-react-native icons only accept a plain `string`.
  * Every tint color configured below (`tabBarActiveTintColor`/
  * `tabBarInactiveTintColor`) is always a literal hex string, so this narrows
- * safely without a cast — same pattern the sibling ecommerce mobile port uses.
+ * safely without a cast - same pattern the sibling ecommerce mobile port uses.
  */
 function toIconColor(color: ColorValue): string {
   return typeof color === "string" ? color : FALLBACK_ICON_COLOR;

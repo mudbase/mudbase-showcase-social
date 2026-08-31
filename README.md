@@ -1,7 +1,7 @@
-# Mudbase Showcase — Social
+# Mudbase Showcase - Social
 
-A realtime micro-blog/social feed app built **entirely on [Mudbase](https://www.mudbase.dev)** —
-auth, database, realtime, and file storage — with **zero custom backend**. The same app,
+A realtime micro-blog/social feed app built **entirely on [Mudbase](https://www.mudbase.dev)** -
+auth, database, realtime, and file storage - with **zero custom backend**. The same app,
 reimplemented once per official Mudbase SDK, so every supported language has a real, runnable
 reference app rather than a toy snippet.
 
@@ -25,7 +25,7 @@ feed via Mudbase's WebSocket support.
 | [`php/`](./php) | Server-rendered web app | PHP |
 | [`swift/`](./swift) | iOS app (SwiftUI) | Swift |
 
-Each directory is self-contained with its own README, dependency manifest, and `.env.example` —
+Each directory is self-contained with its own README, dependency manifest, and `.env.example` -
 clone this repo and only set up the language you care about.
 
 ## Prerequisite: clone the SDK repo as a sibling
@@ -45,14 +45,14 @@ some-folder/
 
 Four collections on a single Mudbase project:
 
-- **posts** — `authorId`, `authorName`, `content`, `imageUrl?`, `likesCount`, `commentsCount`
-- **comments** — `postId`, `authorId`, `authorName`, `content`
-- **likes** — `postId`, `userId` (one per user per post — enforced app-side)
-- **follows** — `followerId`, `followingId`, `followingName?`
+- **posts** - `authorId`, `authorName`, `content`, `imageUrl?`, `likesCount`, `commentsCount`
+- **comments** - `postId`, `authorId`, `authorName`, `content`
+- **likes** - `postId`, `userId` (one per user per post - enforced app-side)
+- **follows** - `followerId`, `followingId`, `followingName?`
 
-Auth, users, and file storage (post images) are all native Mudbase features — no separate user
+Auth, users, and file storage (post images) are all native Mudbase features - no separate user
 table.
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT - see [LICENSE](./LICENSE).

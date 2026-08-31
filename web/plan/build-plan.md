@@ -1,6 +1,6 @@
-# Build Plan — Mudbase Showcase: Social
+# Build Plan - Mudbase Showcase: Social
 Generated: 2026-07-31
-Mode: greenfield (1 of 10 language/platform ports — this is the reference implementation)
+Mode: greenfield (1 of 10 language/platform ports - this is the reference implementation)
 Type: web (fullstack via BaaS, no custom backend)
 Stack: Next.js 15 App Router + TypeScript + Tailwind CSS + shadcn/ui, backed entirely by Mudbase (cloud.mudbase.dev)
 
@@ -95,9 +95,9 @@ wiring" instruction:
    and not something fixable from this app's code or this build's credentials. Re-verified live
    afterward: all three collections now create successfully - see "Live smoke test results".
 
-## Data Models (Mudbase Collections — already provisioned, used as-is, not recreated)
+## Data Models (Mudbase Collections - already provisioned, used as-is, not recreated)
 
-### posts — `6a6cf7d0d07caabbbdfbe9db`
+### posts - `6a6cf7d0d07caabbbdfbe9db`
 `authorId` (string), `authorName` (string), `content` (string), `imageUrl` (string, optional),
 `likesCount` (number), `commentsCount` (number), plus `_id`/`createdAt`/`updatedAt`.
 Permissions: `customer` role → create/read/update/delete, `dataScope: "all"` (granted live, see
@@ -105,13 +105,13 @@ finding #7). Anonymous (`viewer`, no `customRole`) → read only. **Fully verifi
 two posts created by two different accounts, sort/pagination/counter updates and both realtime
 event types all confirmed - see "Live smoke test results" below.
 
-### comments — `6a6cf7d1d07caabbbdfbe9f1`
+### comments - `6a6cf7d1d07caabbbdfbe9f1`
 `postId` (string), `authorId` (string), `authorName` (string), `content` (string).
 One row per comment; sorted `createdAt` ascending in the UI (oldest first, normal thread order).
 Permissions granted identically to `posts` (finding #7). **Fully verified working live** - see
 "Live smoke test results" below.
 
-### likes — `6a6cf81ed07caabbbdfbea20`
+### likes - `6a6cf81ed07caabbbdfbea20`
 `postId` (string), `userId` (string). One row per (postId, userId) pair - this collection type
 has no compound unique index, so uniqueness is enforced at the application layer: every toggle
 re-queries `{postId, userId}` immediately before creating/deleting (see `useToggleLike`), which is
@@ -119,7 +119,7 @@ a reasonable (not airtight) guard against a double-click/double-tab race, per th
 "check-then-act is fine for a demo" instruction. **Fully verified working live** - see "Live smoke
 test results" below.
 
-### follows — `6a6cf81ed07caabbbdfbea32`
+### follows - `6a6cf81ed07caabbbdfbea32`
 `followerId` (string), `followingId` (string), `followingName` (string, optional - denormalized
 at write time so a profile page can resolve a display name for a user who has never posted; see
 "Known limitations"). Same check-then-act uniqueness guard as likes (`useToggleFollow`).
@@ -183,16 +183,16 @@ that post exists (feed page or post-detail) - this is what makes another user's 
 appear live on a post already open in your feed, not just brand-new posts.
 
 ## UI Pages
-- `/` — feed: `PostComposer` + `FeedList` (paginated via `useInfiniteQuery`, "Load more"; live via
+- `/` - feed: `PostComposer` + `FeedList` (paginated via `useInfiniteQuery`, "Load more"; live via
   `usePostsLive`). Public read; posting redirects to `/login` if not authenticated.
-- `/posts/[id]` — post detail: full post, `CommentList` (oldest-first), `CommentComposer`, like
+- `/posts/[id]` - post detail: full post, `CommentList` (oldest-first), `CommentComposer`, like
   toggle.
-- `/users/[userId]` — profile: resolved display name, follower/following/post counts, that user's
+- `/users/[userId]` - profile: resolved display name, follower/following/post counts, that user's
   posts, follow/unfollow button (hidden on your own profile).
-- `/profile` — thin client-side redirect to `/users/{currentUserId}`.
-- `/login`, `/register` — email+password; register shows a "check your inbox" state rather than
+- `/profile` - thin client-side redirect to `/users/{currentUserId}`.
+- `/login`, `/register` - email+password; register shows a "check your inbox" state rather than
   assuming a session (see verification finding #5 above).
-- `/verify-email` — completes the emailed verification link.
+- `/verify-email` - completes the emailed verification link.
 
 ## Security Implementation
 - Input validation: zod schemas for every form (register, login, post composer, comment

@@ -9,7 +9,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfilePostList } from "@/components/profile/ProfilePostList";
 
 /**
- * Shared by both the "My profile" tab and `/users/[userId]` — same content,
+ * Shared by both the "My profile" tab and `/users/[userId]` - same content,
  * the only difference is which userId is passed in (and FollowButton hides
  * itself automatically when it's the signed-in user's own id). Mirrors
  * web/src/app/users/[userId]/page.tsx.

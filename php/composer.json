@@ -1,6 +1,6 @@
 {
     "name": "mudbase/showcase-social-php",
-    "description": "Mudbase Social storefront — PHP reimplementation of the Mudbase showcase social micro-blog. Plain PHP, no framework, backed entirely by the real Mudbase PHP SDK.",
+    "description": "Mudbase Social storefront - PHP reimplementation of the Mudbase showcase social micro-blog. Plain PHP, no framework, backed entirely by the real Mudbase PHP SDK.",
     "type": "project",
     "license": "unlicense",
     "require": {

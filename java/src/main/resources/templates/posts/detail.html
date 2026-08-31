@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title th:text="${post.authorName + ': ' + #strings.abbreviate(post.content, 60)}">Post — Pulse</title>
+  <title th:text="${post.authorName + ': ' + #strings.abbreviate(post.content, 60)}">Post - Pulse</title>
   <th:block th:replace="~{fragments/layout :: head-assets}"></th:block>
 </head>
 <body>
@@ -34,7 +34,7 @@
     </div>
 
     <div th:if="${comments.isEmpty()}" class="empty-state empty-state-compact">
-      <p>No comments yet — say something first.</p>
+      <p>No comments yet - say something first.</p>
     </div>
 
     <ul class="comment-list" th:unless="${comments.isEmpty()}">
