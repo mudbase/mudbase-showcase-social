@@ -32,8 +32,11 @@ clone this repo and only set up the language you care about.
 
 Most versions here (everything except `python/`, `go/`, and `ruby/`, whose package managers can
 install straight from a git subdirectory) reference the [mudbase-sdk](https://github.com/mudbase/mudbase-sdk)
-repo by relative path, since none of the 9 SDKs are published to a public registry yet. Clone it
-next to this repo, at the same parent directory level, before building any version besides `web/`:
+repo by relative path, so these builds use the SDK source rather than a registry package. Some SDKs
+are published (checked 2026-11-25): `mudbase-sdk` on npm, `mudbase` on PyPI and RubyGems, the Go
+module `github.com/themudhaxk/mudbase-sdk-go`, and `Mudbase.SDK` on NuGet. Java and PHP packages
+are not on their registries yet. Clone the repo next to this one, at the same parent directory
+level, before building any version besides `web/`:
 
 ```
 some-folder/
